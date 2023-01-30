@@ -1,0 +1,3 @@
+$ -> caises
+. -> cases objectif
+# -> mur
