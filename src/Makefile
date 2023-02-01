@@ -12,11 +12,12 @@ PROGNAME = r0
 COMMANDS = compile_commands.json
 VERSION = 0.1
 SOURCES = r0.cpp
+HEADERS = mysok.h
 
 all: $(PROGNAME)
 
-$(PROGNAME): $(SOURCES)
-	$(CC) $(SOURCES) $(CFLAGS) -o $(PROGNAME)
+$(PROGNAME): $(SOURCES) $(HEADERS)
+	$(CC) $(SOURCES) $(HEADERS) $(CFLAGS) -o $(PROGNAME)
 
 clean:
 	@$(RM) -r $(PROGNAME) $(COMMANDS)
