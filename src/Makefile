@@ -1,7 +1,22 @@
-CC=g++
-CFLAGS=-std=c++11 -Wall -O2
+SHELL = /bin/bash
 
-##### SOKOBAN
-r0: mysok.h r0.cpp
-	$(CC) $(CFLAGS) r0.cpp -o $@
+# définition des commandes utilisées
+CC = g++
+RM = rm -f
 
+# déclaration des options du compilateur
+CFLAGS = -std=c++11 -Wall -O2
+
+# définition des fichiers et dossiers
+PROGNAME = r0
+COMMANDS = compile_commands.json
+VERSION = 0.1
+SOURCES = r0.cpp
+
+all: $(PROGNAME)
+
+$(PROGNAME): $(SOURCES)
+	$(CC) $(SOURCES) $(CFLAGS) -o $(PROGNAME)
+
+clean:
+	@$(RM) -r $(PROGNAME) $(COMMANDS)
