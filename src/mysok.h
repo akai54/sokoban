@@ -14,6 +14,7 @@
 #define MYSOK_H
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <string.h>
 #include <string>
 
@@ -81,11 +82,12 @@ sok_board_t::sok_board_t() {
 void sok_board_t::print_board() {
   for (int i = 0; i < board_nbl; i++) {
     for (int j = 0; j < NBC; j++) {
-      if (board[i][j] == END_OF_LINE) // Si fin de ligne, sortir de la boucle
+      if (board[i][j] == END_OF_LINE) // Si fin, sortir de la boucle
         break;
-      printf("%c", board_str[board[i][j]]); // Afficher la case actuelle
+      // Sinon afficher la case actuelle
+      printf("%c", board_str[board[i][j]]);
     }
-    printf("\n"); // Passer à la ligne suivante
+    printf("\n");
   }
 }
 
