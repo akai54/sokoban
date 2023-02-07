@@ -12,6 +12,7 @@
 
 #ifndef MYSOK_H
 #define MYSOK_H
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -70,27 +71,56 @@ struct sok_board_t {
   void load(char *_file);
 };
 
-void move_man(sok_board_t &S, int direction) {
+// Une fonction qui renvoie la valeur d'une case
+int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
 
+bool can_move(sok_board_t &S, int x, int y) {
+  if (get_coords_name(S, x, y) == OUT || get_coords_name(S, x, y) == WALL ||
+      get_coords_name(S, x, y) == CRATE_ON_TARGET ||
+      get_coords_name(S, x, y) == END_OF_LINE) {
+    return false;
+  }
+  return true;
+}
+
+void move_man(sok_board_t &S, int direction) {
   switch (direction) {
   case MOVE_U:
+    if (can_move(S, S.man1_x - 1, S.man1_y) == false) {
+      std::cout << "Can't go up" << std::endl;
+      break;
+    }
     S.board[S.man1_x][S.man1_y] = FREE;
-    S.man1_x--;
+    S.man1_x -= 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   case MOVE_D:
+    if (can_move(S, S.man1_x + 1, S.man1_y) == false) {
+      std::cout << "Can't go down" << std::endl;
+
+      break;
+    }
     S.board[S.man1_x][S.man1_y] = FREE;
-    S.man1_x++;
+    S.man1_x += 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   case MOVE_L:
+    if (can_move(S, S.man1_x, S.man1_y - 1) == false) {
+      std::cout << "Can't go left" << std::endl;
+      break;
+    }
+    std::cout << "trying to move left" << std::endl;
     S.board[S.man1_x][S.man1_y] = FREE;
-    S.man1_y--;
+    S.man1_y -= 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   case MOVE_R:
+    if (can_move(S, S.man1_x, S.man1_y + 1) == false) {
+      std::cout << "Can't go right" << std::endl;
+      break;
+    }
     S.board[S.man1_x][S.man1_y] = FREE;
-    S.man1_y++;
+    S.man1_y += 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   }
