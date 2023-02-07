@@ -17,8 +17,6 @@
 #include <iostream>
 #include <string.h>
 #include <string>
-#include <tuple>
-#include <unordered_map>
 
 // La taille du grille de jeu
 #define NBL 20 // Nombre de lignes
@@ -34,15 +32,6 @@
 #define MOVE_R 3
 #define MOVE_W 4
 
-using namespace std;
-
-unordered_map<int, tuple<int, int>> move = {
-  { MOVE_U, make_tuple(0, -1)},
-  { MOVE_D,  make_tuple(0, 1)},
-  { MOVE_L,  make_tuple(-1, 0)},
-  { MOVE_R,  make_tuple(1, 0)},
-  { MOVE_W,  make_tuple(0, 0)},
-};
 // La position sur le grille
 #define OUT 0
 #define FREE 1
@@ -59,8 +48,8 @@ unordered_map<int, tuple<int, int>> move = {
 // Représentation en chaîne du grille de jeu
 char board_str[] = {' ', '_', '.', '#', '$', '*', '1', 'u', '2', 'd', 'a'};
 
-// Représentation en chaîne des mouvement
-string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
+// Représentation en chaîne des mouvements
+std::string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
 
 // Structure sok_board_t définissant un grille de jeu Sokoban
 struct sok_board_t {
@@ -79,12 +68,6 @@ struct sok_board_t {
 
   // Charger le grille de jeu à partir d'un fichier
   void load(char *_file);
-
-  void print_board_brut();
-
-  bool position_is_free(tuple<int, int> pos);
-  bool is_position_of_crate(tuple<int, int> pos);
-  bool legal_move_man_1(tuple<int, int> move);
 };
 
 // Constructeur par défaut
@@ -95,18 +78,6 @@ sok_board_t::sok_board_t() {
       board[i][j] = FREE;
 }
 
-void sok_board_t::print_board_brut(){
-  for (int i = 0; i < board_nbl; i++) {
-    for (int j = 0; j < NBC; j++) {
-      if (board[i][j] == END_OF_LINE) // Si fin, sortir de la boucle
-        break;
-      // Sinon afficher la case actuelle
-      printf("%d", board[i][j]);
-    }
-    printf("\n");
-  }
-  
-}
 // Afficher le grille de jeu
 void sok_board_t::print_board() {
   for (int i = 0; i < board_nbl; i++) {
@@ -180,57 +151,4 @@ void sok_board_t::load(char *_file) {
   fclose(fp);
 }
 
-/*
-Algo global :   
-on prend un bloc au hasard
-On calcule la distance 
-
- */
-bool position_exist_on_the_board(tuple<int, int> pos){
-  if (get<0>(pos) >= NBC || get<1>(pos) >= NBC || get<0>(pos) < 0 || get<1>(pos) < 0){
-    return false;
-  }
-  return true;
-}
-
-tuple<int, int> apply_move_to_position(tuple<int, int> move, int x, int y){
-  return make_tuple(x + get<0>(move)
-                         ,y + get<1>(move));
-}
-
-bool sok_board_t::position_is_free(tuple<int, int> pos){
-  if (this -> board[get<0>(pos)][get<1>(pos)] == FREE){
-    return true;
-  }
-  return false;
-}
-
-bool sok_board_t::is_position_of_crate(tuple<int, int> pos){
-  if (this -> board[get<0>(pos)][get<1>(pos)] == CRATE_ON_FREE){
-    return true;
-  }
-  return false;
-}
-bool sok_board_t::legal_move_man_1(tuple<int, int> move){
-  tuple<int, int> new_pos = apply_move_to_position(move, this->man1_x, this->man1_y);
-  if (!position_exist_on_the_board(new_pos)){
-    return false;
-  }
-  if (this->position_is_free(new_pos)){
-    return true;
-  }
-  if (this->is_position_of_crate(new_pos)){
-    // calcul de la nouvelle position du crate après le mouvement
-    tuple<int, int> new_pos_of_crate = apply_move_to_position(move, get<0>(new_pos), get<1>(new_pos));
-
-    if (position_exist_on_the_board(new_pos_of_crate)){
-      if (this->position_is_free(new_pos_of_crate)){
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 #endif
-
