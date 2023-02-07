@@ -18,7 +18,8 @@
 #include <string.h>
 #include <string>
 #include <tuple>
-#include <unordered_map>
+#include <queue>
+#include <vector>
 
 // La taille du grille de jeu
 #define NBL 20 // Nombre de lignes
@@ -36,13 +37,14 @@
 
 using namespace std;
 
-unordered_map<int, tuple<int, int>> move = {
-  { MOVE_U, make_tuple(0, -1)},
-  { MOVE_D,  make_tuple(0, 1)},
-  { MOVE_L,  make_tuple(-1, 0)},
-  { MOVE_R,  make_tuple(1, 0)},
-  { MOVE_W,  make_tuple(0, 0)},
+vector<tuple<int, int>> move_in_vector = {
+  { make_tuple(0 ,-1) },
+  { make_tuple(0 , 1) },
+  { make_tuple(-1, 0) },
+  { make_tuple(1 , 0) },
+  { make_tuple(0 , 0) },
 };
+
 // La position sur le grille
 #define OUT 0
 #define FREE 1
@@ -181,9 +183,14 @@ void sok_board_t::load(char *_file) {
 }
 
 /*
-Algo global :   
-on prend un bloc au hasard
-On calcule la distance 
+Algo global :
+Comment s'y prendre ?
+J'avais penser à calculer le bloc le plus proche, puis le moins proche, puis le
+moins proche
+mais c'est pas une bonne idée si on veut ramener tout les blocs à destination,
+car des fois, il faut un peu déplacer un bloc pour mettre l'autre
+du coup, comment faire ?
+
 
  */
 bool position_exist_on_the_board(tuple<int, int> pos){
@@ -211,6 +218,56 @@ bool sok_board_t::is_position_of_crate(tuple<int, int> pos){
   }
   return false;
 }
+
+/* Algo pour les boites : 
+Il y a la position d'un boite en argument
+Pour chaque mouvement depuis cette boite, regarder s'il est légal. Si oui, regarder s
+*/
+tuple<int, int> find_nearest_goal(){
+  // à créer
+  return make_tuple(0, 0);
+}
+tuple<int, int> make_move(tuple<int, int> current_pos, int my_move){
+  tuple<int, int> vector_of_move = move_in_vector[my_move];
+  return make_tuple(get<0>(current_pos) + get<0>(vector_of_move),
+                    get<1>(current_pos) + get<1>(vector_of_move));
+}
+// tuple<int, int> crate_is_movable(tuple<int, int> current_pos, int my_move){
+bool crate_is_movable(tuple<int, int> current_pos, int my_move){
+  // il faut vérifier que le côté opposé de la position est accessible
+  // il faudra améliorer cette fonction, en prenant en compte la précédente position théorique du joueur, et de s'il peut accéder à ce fameux côté opposé depuis là où il est
+  return true;
+}
+bool legal_move_crate(tuple<int, int> current_pos,tuple<int, int> new_pos, tuple<int, int> move){
+  // move illégal si la case du côté opposé est unreachable, faut utilisé current_pos et move
+  // Si c'est reachable, alors la nouvelle case se doit d'être free, ça c'est new_pos
+  return true;
+}
+queue<int> a_star_crate(tuple<int, int> current_pos, queue<int> path_to_the_goal, tuple<int, int> goal){
+  if (current_pos == goal) { // on peut peut-être pas comparer des tuple comme ça, dans le cas échéant faudra créer une fonct
+    // je commente car c'est plus simple de pas faire comme ça  
+    // path_to_the_goal.push_back(current_pos);  // 
+    return path_to_the_goal;
+  }
+  printf("Original pos %d, %d \n", get<0>(current_pos), get<1>(current_pos));
+  for (int i = 0 ; i < 5; i++){
+    // printf("%d", i)
+    tuple<int, int> new_move = make_move(current_pos, i);
+    if (legal_move_crate(current_pos, new_move, move_in_vector[i])) {
+      printf("%d, %d \n", get<0>(new_move), get<1>(new_move));
+    }
+    // il manque quoi ? appel récursif pour chaque légal move
+    // remplir les autres fonctions
+    // peut-être d'autres choses que j'ai oublier
+  }
+  return path_to_the_goal;
+}
+queue<int> a_star_crate_init(tuple<int, int> current_pos){
+  queue<int> path_to_the_goal;
+  tuple<int, int> goal = find_nearest_goal();
+  return a_star_crate(current_pos, path_to_the_goal, goal);
+}
+
 bool sok_board_t::legal_move_man_1(tuple<int, int> move){
   tuple<int, int> new_pos = apply_move_to_position(move, this->man1_x, this->man1_y);
   if (!position_exist_on_the_board(new_pos)){
