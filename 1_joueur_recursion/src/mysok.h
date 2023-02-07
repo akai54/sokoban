@@ -80,6 +80,11 @@ bool can_move(sok_board_t &S, int x, int y) {
       get_coords_name(S, x, y) == CRATE_ON_TARGET ||
       get_coords_name(S, x, y) == END_OF_LINE) {
     return false;
+  } else if (get_coords_name(S, x, y) == CRATE_ON_FREE) {
+    if (get_coords_name(S, x + 1, y) == TARGET) {
+      return true;
+    }
+    return false;
   }
   return true;
 }
@@ -101,7 +106,14 @@ void move_man(sok_board_t &S, int direction) {
 
       break;
     }
+    // Si la prochaine case est une caisse alors on la pousse
+    if (get_coords_name(S, S.man1_x + 1, S.man1_y) == CRATE_ON_FREE) {
+      S.board[S.man1_x + 1][S.man1_y] = FREE;
+      S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
+      S.crates--;
+    }
     S.board[S.man1_x][S.man1_y] = FREE;
+
     S.man1_x += 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
