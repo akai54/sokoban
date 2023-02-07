@@ -56,6 +56,7 @@ std::string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
 struct sok_board_t {
   int board[NBL][NBC]; // grille de jeu
   int board_nbl;       // Nombre de lignes du grille
+  int crates = 0;      // Nombres total des caisses
   int man1_x;          // Coordonnées du joueur 1 (x)
   int man1_y;          // Coordonnées du joueur 1 (y)
   int man2_x;          // Coordonnées du joueur 2 (x)
@@ -176,6 +177,7 @@ void sok_board_t::load(char *_file) {
           read_ok = true;
           board[board_nbl][i] = WALL;
         } else if (line[i] == board_str[CRATE_ON_FREE]) {
+          crates++;
           board[board_nbl][i] = CRATE_ON_FREE;
         } else if (line[i] == board_str[CRATE_ON_TARGET]) {
           board[board_nbl][i] = CRATE_ON_TARGET;
