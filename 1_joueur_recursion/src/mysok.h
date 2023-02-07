@@ -70,6 +70,32 @@ struct sok_board_t {
   void load(char *_file);
 };
 
+void move_man(sok_board_t &S, int direction) {
+
+  switch (direction) {
+  case MOVE_U:
+    S.board[S.man1_x][S.man1_y] = FREE;
+    S.man1_x--;
+    S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
+    break;
+  case MOVE_D:
+    S.board[S.man1_x][S.man1_y] = FREE;
+    S.man1_x++;
+    S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
+    break;
+  case MOVE_L:
+    S.board[S.man1_x][S.man1_y] = FREE;
+    S.man1_y--;
+    S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
+    break;
+  case MOVE_R:
+    S.board[S.man1_x][S.man1_y] = FREE;
+    S.man1_y++;
+    S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
+    break;
+  }
+}
+
 // Constructeur par défaut
 sok_board_t::sok_board_t() {
   // Initialiser le grille avec des cases libres
