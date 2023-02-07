@@ -17,6 +17,8 @@
 #include <iostream>
 #include <string.h>
 #include <string>
+#include <tuple>
+#include <unordered_map>
 
 // La taille du grille de jeu
 #define NBL 20 // Nombre de lignes
@@ -32,6 +34,15 @@
 #define MOVE_R 3
 #define MOVE_W 4
 
+using namespace std;
+
+unordered_map<int, tuple<int, int>> move = {
+  { MOVE_U, make_tuple(0, -1)},
+  { MOVE_D,  make_tuple(0, 1)},
+  { MOVE_L,  make_tuple(-1, 0)},
+  { MOVE_R,  make_tuple(1, 0)},
+  { MOVE_W,  make_tuple(0, 0)},
+};
 // La position sur le grille
 #define OUT 0
 #define FREE 1
@@ -49,7 +60,7 @@
 char board_str[] = {' ', '_', '.', '#', '$', '*', '1', 'u', '2', 'd', 'a'};
 
 // Représentation en chaîne des mouvement
-std::string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
+string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
 
 // Structure sok_board_t définissant un grille de jeu Sokoban
 struct sok_board_t {
@@ -70,6 +81,10 @@ struct sok_board_t {
   void load(char *_file);
 
   void print_board_brut();
+
+  bool position_is_free(tuple<int, int> pos);
+  bool is_position_of_crate(tuple<int, int> pos);
+  bool legal_move_man_1(tuple<int, int> move);
 };
 
 // Constructeur par défaut
@@ -171,27 +186,51 @@ on prend un bloc au hasard
 On calcule la distance 
 
  */
-bool position_exist(int x, int y){
-
+bool position_exist_on_the_board(tuple<int, int> pos){
+  if (get<0>(pos) >= NBC || get<1>(pos) >= NBC || get<0>(pos) < 0 || get<1>(pos) < 0){
+    return false;
+  }
+  return true;
 }
-bool legal_move_man_1(int move){
-  /* comment faire ?
-     D'abord écrire le mouvement, du coup il faut fare un switch avec le move
-     après, on vérifie si la position existe, si oui, on renvoie true
-     si non, alors on vérifie si la position : movement + position possède un bloc à déplacer
-     si non, alors move interdit
-     si oui, alors on fait move*2, et on applique à la position, et on regarde si la case est libre
-     si oui alors true
-     si non, illegal move
-   */
-  if (move == MOVE_U) {
-    if (!position_exist(man_1_x, man_1_y-1)) {
-      return false;
-    }
-    if (board[man_1_x][man_1_y-1] == FREE) {
 
+tuple<int, int> apply_move_to_position(tuple<int, int> move, int x, int y){
+  return make_tuple(x + get<0>(move)
+                         ,y + get<1>(move));
+}
+
+bool sok_board_t::position_is_free(tuple<int, int> pos){
+  if (this -> board[get<0>(pos)][get<1>(pos)] == FREE){
+    return true;
+  }
+  return false;
+}
+
+bool sok_board_t::is_position_of_crate(tuple<int, int> pos){
+  if (this -> board[get<0>(pos)][get<1>(pos)] == CRATE_ON_FREE){
+    return true;
+  }
+  return false;
+}
+bool sok_board_t::legal_move_man_1(tuple<int, int> move){
+  tuple<int, int> new_pos = apply_move_to_position(move, this->man1_x, this->man1_y);
+  if (!position_exist_on_the_board(new_pos)){
+    return false;
+  }
+  if (this->position_is_free(new_pos)){
+    return true;
+  }
+  if (this->is_position_of_crate(new_pos)){
+    // calcul de la nouvelle position du crate après le mouvement
+    tuple<int, int> new_pos_of_crate = apply_move_to_position(move, get<0>(new_pos), get<1>(new_pos));
+
+    if (position_exist_on_the_board(new_pos_of_crate)){
+      if (this->position_is_free(new_pos_of_crate)){
+        return true;
+      }
     }
   }
+  return false;
 }
 
 #endif
+
