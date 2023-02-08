@@ -244,9 +244,7 @@ bool legal_move_crate(tuple<int, int> current_pos,tuple<int, int> new_pos, tuple
   return true;
 }
 queue<int> a_star_crate(tuple<int, int> current_pos, queue<int> path_to_the_goal, tuple<int, int> goal){
-  if (current_pos == goal) { // on peut peut-être pas comparer des tuple comme ça, dans le cas échéant faudra créer une fonct
-    // je commente car c'est plus simple de pas faire comme ça  
-    // path_to_the_goal.push_back(current_pos);  // 
+  if (current_pos == goal) { 
     return path_to_the_goal;
   }
   printf("Original pos %d, %d \n", get<0>(current_pos), get<1>(current_pos));
@@ -254,7 +252,10 @@ queue<int> a_star_crate(tuple<int, int> current_pos, queue<int> path_to_the_goal
     // printf("%d", i)
     tuple<int, int> new_move = make_move(current_pos, i);
     if (legal_move_crate(current_pos, new_move, move_in_vector[i])) {
-      printf("%d, %d \n", get<0>(new_move), get<1>(new_move));
+      // printf("%d, %d \n", get<0>(new_move), get<1>(new_move));
+      path_to_the_goal.push_back(i);
+      a_star_crate(new_move, path_to_the_goal, goal)
+      path_to_the_goal.pop_back(i);
     }
     // il manque quoi ? appel récursif pour chaque légal move
     // remplir les autres fonctions
