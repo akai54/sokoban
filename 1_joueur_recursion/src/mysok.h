@@ -54,6 +54,7 @@ std::string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
 
 // Structure sok_board_t définissant un grille de jeu Sokoban
 struct sok_board_t {
+  bool seen[NBL][NBC]; // Cases visitees
   int board[NBL][NBC]; // grille de jeu
   int board_nbl;       // Nombre de lignes du grille
   int crates = 0;      // Nombres total des caisses
@@ -71,6 +72,12 @@ struct sok_board_t {
   // Charger le grille de jeu à partir d'un fichier
   void load(char *_file);
 };
+
+// Mettre les cases visites dans la liste seen
+void updateSeenArray(sok_board_t &S) {
+  S.seen[S.man1_x][S.man1_y] = true;
+  std::cout << "Updated" << std::endl;
+}
 
 // Une fonction qui renvoie la valeur d'une case
 int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
@@ -128,7 +135,6 @@ void move_man(sok_board_t &S, int direction) {
       }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
-
     S.man1_x += 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
@@ -180,9 +186,12 @@ void move_man(sok_board_t &S, int direction) {
 // Constructeur par défaut
 sok_board_t::sok_board_t() {
   // Initialiser le grille avec des cases libres
+  // Initialiser le tableau seen avec des false
   for (int i = 0; i < NBL; i++)
-    for (int j = 0; j < NBC; j++)
+    for (int j = 0; j < NBC; j++) {
       board[i][j] = FREE;
+      seen[i][j] = false;
+    }
 }
 
 // Afficher le grille de jeu
