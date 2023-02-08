@@ -93,16 +93,10 @@ bool can_move(sok_board_t &S, int x, int y) {
 }
 
 // Mettre les cases visites dans la liste seen
-// uniquement si on ne peut plus bouger depuis.
-void updateSeenArray(sok_board_t &S) {
-  // Only mark the current square as seen if the player cannot move in any
-  // direction
-  if (!can_move(S, S.man1_x - 1, S.man1_y) &&
-      !can_move(S, S.man1_x + 1, S.man1_y) &&
-      !can_move(S, S.man1_x, S.man1_y - 1) &&
-      !can_move(S, S.man1_x, S.man1_y + 1)) {
-    S.seen[S.man1_x][S.man1_y] = true;
-  }
+// uniquement si on a reussi a pousser une caisse vers une case obj.
+void updateSeenArray(sok_board_t &S, int x, int y) {
+  S.seen[x][y] = true;
+  std::cout << "added to ban zone" << std::endl;
 }
 
 void move_man(sok_board_t &S, int direction) {
@@ -118,6 +112,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
         S.crates--;
+        updateSeenArray(S, S.man1_x - 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == FREE) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
@@ -140,6 +135,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
         S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
         S.crates--;
+        updateSeenArray(S, S.man1_x + 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == FREE) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
@@ -161,6 +157,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
         S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
         S.crates--;
+        updateSeenArray(S, S.man1_x, S.man1_y - 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == FREE) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
@@ -182,6 +179,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
         S.crates--;
+        updateSeenArray(S, S.man1_x, S.man1_y + 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == FREE) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
