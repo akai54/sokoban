@@ -9,10 +9,14 @@ int main(int _ac, char **_av) {
   sok_board_t S;
   S.load(_av[1]);
   S.print_board();
-  move_man(S, MOVE_D);
+  move_man(S, MOVE_R);
   S.print_board();
   move_man(S, MOVE_D);
   S.print_board();
-  move_man(S, MOVE_D);
+  move_man(S, MOVE_L);
+  S.print_board();
+  move_man(S, MOVE_L);
+  S.print_board();
+  move_man(S, MOVE_L);
   return 0;
 }

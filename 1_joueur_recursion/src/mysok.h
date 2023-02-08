@@ -100,6 +100,10 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
         S.crates--;
       }
+      if (get_coords_name(S, S.man1_x - 2, S.man1_y) == FREE) {
+        S.board[S.man1_x - 1][S.man1_y] = FREE;
+        S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_FREE;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_x -= 1;
@@ -117,6 +121,10 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
         S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
         S.crates--;
+      }
+      if (get_coords_name(S, S.man1_x + 2, S.man1_y) == FREE) {
+        S.board[S.man1_x + 1][S.man1_y] = FREE;
+        S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_FREE;
       }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
@@ -136,8 +144,11 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
         S.crates--;
       }
+      if (get_coords_name(S, S.man1_x, S.man1_y - 2) == FREE) {
+        S.board[S.man1_x][S.man1_y - 1] = FREE;
+        S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_FREE;
+      }
     }
-    std::cout << "trying to move left" << std::endl;
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_y -= 1;
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
@@ -153,6 +164,10 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
         S.crates--;
+      }
+      if (get_coords_name(S, S.man1_x, S.man1_y + 2) == FREE) {
+        S.board[S.man1_x][S.man1_y + 1] = FREE;
+        S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_FREE;
       }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
