@@ -73,11 +73,13 @@ struct sok_board_t {
   void load(char *_file);
 };
 
-// Mettre les cases visites dans la liste seen
-void updateSeenArray(sok_board_t &S) {
-  S.seen[S.man1_x][S.man1_y] = true;
-  std::cout << "Updated" << std::endl;
+// Renvoi si une case a deja ete visite
+bool isSquareVisited(const sok_board_t &S, int x, int y) {
+  return S.seen[x][y];
 }
+
+// Mettre les cases visites dans la liste seen
+void updateSeenArray(sok_board_t &S) { S.seen[S.man1_x][S.man1_y] = true; }
 
 // Une fonction qui renvoie la valeur d'une case
 int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
@@ -85,7 +87,7 @@ int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
 bool can_move(sok_board_t &S, int x, int y) {
   if (get_coords_name(S, x, y) == OUT || get_coords_name(S, x, y) == WALL ||
       get_coords_name(S, x, y) == CRATE_ON_TARGET ||
-      get_coords_name(S, x, y) == END_OF_LINE) {
+      get_coords_name(S, x, y) == END_OF_LINE || isSquareVisited(S, x, y)) {
     return false;
   } else if (get_coords_name(S, x, y) == CRATE_ON_FREE) {
     return true;
