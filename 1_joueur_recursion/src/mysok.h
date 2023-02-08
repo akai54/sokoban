@@ -78,9 +78,6 @@ bool isSquareVisited(const sok_board_t &S, int x, int y) {
   return S.seen[x][y];
 }
 
-// Mettre les cases visites dans la liste seen
-void updateSeenArray(sok_board_t &S) { S.seen[S.man1_x][S.man1_y] = true; }
-
 // Une fonction qui renvoie la valeur d'une case
 int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
 
@@ -93,6 +90,19 @@ bool can_move(sok_board_t &S, int x, int y) {
     return true;
   }
   return true;
+}
+
+// Mettre les cases visites dans la liste seen
+// uniquement si on ne peut plus bouger depuis.
+void updateSeenArray(sok_board_t &S) {
+  // Only mark the current square as seen if the player cannot move in any
+  // direction
+  if (!can_move(S, S.man1_x - 1, S.man1_y) &&
+      !can_move(S, S.man1_x + 1, S.man1_y) &&
+      !can_move(S, S.man1_x, S.man1_y - 1) &&
+      !can_move(S, S.man1_x, S.man1_y + 1)) {
+    S.seen[S.man1_x][S.man1_y] = true;
+  }
 }
 
 void move_man(sok_board_t &S, int direction) {
@@ -263,6 +273,7 @@ void sok_board_t::load(char *_file) {
       if (read_ok) {
         board[board_nbl][nread - 1] = END_OF_LINE;
         board_nbl++;
+        std::cout << nread << std::endl;
       }
     }
   }

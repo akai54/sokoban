@@ -10,11 +10,5 @@ int main(int _ac, char **_av) {
   S.load(_av[1]);
   S.print_board();
   std::cout << S.man1_x << "," << S.man1_y << std::endl;
-  updateSeenArray(S);
-  for (int i = 0; i < NBL; i++) {
-    for (int j = 0; j < NBC; j++)
-      std::cout << S.seen[i][j] << " ";
-    std::cout << std::endl;
-  }
   return 0;
 }
