@@ -81,10 +81,7 @@ bool can_move(sok_board_t &S, int x, int y) {
       get_coords_name(S, x, y) == END_OF_LINE) {
     return false;
   } else if (get_coords_name(S, x, y) == CRATE_ON_FREE) {
-    if (get_coords_name(S, x + 1, y) == TARGET) {
-      return true;
-    }
-    return false;
+    return true;
   }
   return true;
 }
@@ -95,6 +92,14 @@ void move_man(sok_board_t &S, int direction) {
     if (can_move(S, S.man1_x - 1, S.man1_y) == false) {
       std::cout << "Can't go up" << std::endl;
       break;
+    }
+    // Si la prochaine case est une caisse alors on la pousse
+    if (get_coords_name(S, S.man1_x - 1, S.man1_y) == CRATE_ON_FREE) {
+      if (get_coords_name(S, S.man1_x - 2, S.man1_y) == TARGET) {
+        S.board[S.man1_x - 1][S.man1_y] = FREE;
+        S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
+        S.crates--;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_x -= 1;
@@ -108,9 +113,11 @@ void move_man(sok_board_t &S, int direction) {
     }
     // Si la prochaine case est une caisse alors on la pousse
     if (get_coords_name(S, S.man1_x + 1, S.man1_y) == CRATE_ON_FREE) {
-      S.board[S.man1_x + 1][S.man1_y] = FREE;
-      S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
-      S.crates--;
+      if (get_coords_name(S, S.man1_x + 2, S.man1_y) == TARGET) {
+        S.board[S.man1_x + 1][S.man1_y] = FREE;
+        S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
+        S.crates--;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
 
@@ -122,6 +129,14 @@ void move_man(sok_board_t &S, int direction) {
       std::cout << "Can't go left" << std::endl;
       break;
     }
+    // Si la prochaine case est une caisse alors on la pousse
+    if (get_coords_name(S, S.man1_x, S.man1_y - 1) == CRATE_ON_FREE) {
+      if (get_coords_name(S, S.man1_x, S.man1_y - 2) == TARGET) {
+        S.board[S.man1_x][S.man1_y - 1] = FREE;
+        S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
+        S.crates--;
+      }
+    }
     std::cout << "trying to move left" << std::endl;
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_y -= 1;
@@ -131,6 +146,14 @@ void move_man(sok_board_t &S, int direction) {
     if (can_move(S, S.man1_x, S.man1_y + 1) == false) {
       std::cout << "Can't go right" << std::endl;
       break;
+    }
+    // Si la prochaine case est une caisse alors on la pousse
+    if (get_coords_name(S, S.man1_x, S.man1_y + 1) == CRATE_ON_FREE) {
+      if (get_coords_name(S, S.man1_x, S.man1_y + 2) == TARGET) {
+        S.board[S.man1_x][S.man1_y + 1] = FREE;
+        S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
+        S.crates--;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_y += 1;
