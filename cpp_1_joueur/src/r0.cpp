@@ -15,6 +15,6 @@ int main(int _ac, char **_av) {
   S.print_board();
   S.print_board_brut();
 
-  a_star_crate_init(make_tuple(0,5));
+  S.path_to_the_goal();
   return 0;
 }
