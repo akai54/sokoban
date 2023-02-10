@@ -57,7 +57,7 @@ struct sok_board_t {
   bool seen[NBL][NBC]; // Cases visitees
   int board[NBL][NBC]; // grille de jeu
   int board_nbl;       // Nombre de lignes du grille
-  int crates = 0;      // Nombres total des caisses
+  int nbr_crates = 0;  // Nombres total des caisses
   int man1_x;          // Coordonnées du joueur 1 (x)
   int man1_y;          // Coordonnées du joueur 1 (y)
   int man2_x;          // Coordonnées du joueur 2 (x)
@@ -72,6 +72,15 @@ struct sok_board_t {
   // Charger le grille de jeu à partir d'un fichier
   void load(char *_file);
 };
+
+// Une structure qui va sauvegarder les coords des caisses.
+struct Crate {
+  int x, y;
+};
+
+// Une liste dynamique qui va stocker les coords
+// Envoyer depuis la structure Crate
+Crate *crates = nullptr;
 
 // Renvoi si une case a deja ete visite
 bool isSquareVisited(const sok_board_t &S, int x, int y) {
@@ -112,7 +121,7 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == TARGET) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
-        S.crates--;
+        S.nbr_crates--;
         updateSeenArray(S, S.man1_x - 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == FREE) {
@@ -141,7 +150,7 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == TARGET) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
         S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
-        S.crates--;
+        S.nbr_crates--;
         updateSeenArray(S, S.man1_x + 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == FREE) {
@@ -169,7 +178,7 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == TARGET) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
         S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
-        S.crates--;
+        S.nbr_crates--;
         updateSeenArray(S, S.man1_x, S.man1_y - 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == FREE) {
@@ -197,7 +206,7 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == TARGET) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
-        S.crates--;
+        S.nbr_crates--;
         updateSeenArray(S, S.man1_x, S.man1_y + 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == FREE) {
@@ -271,8 +280,19 @@ void sok_board_t::load(char *_file) {
           read_ok = true;
           board[board_nbl][i] = WALL;
         } else if (line[i] == board_str[CRATE_ON_FREE]) {
-          crates++;
           board[board_nbl][i] = CRATE_ON_FREE;
+          // Stocker les coords dans la structure, avant de la
+          // copier dans la liste qui va augmenter de taille
+          // exactement a chaque nouvelle caisse lu.
+          Crate c = {board_nbl, i};
+          Crate *new_crates = new Crate[nbr_crates + 1];
+          for (int i = 0; i < nbr_crates; i++) {
+            new_crates[i] = crates[i];
+          }
+          new_crates[nbr_crates] = c;
+          nbr_crates++;
+          delete[] crates;
+          crates = new_crates;
         } else if (line[i] == board_str[CRATE_ON_TARGET]) {
           board[board_nbl][i] = CRATE_ON_TARGET;
         } else if (line[i] == board_str[MAN1_ON_FREE]) {
