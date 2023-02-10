@@ -21,7 +21,6 @@ int main(int _ac, char **_av) {
     std::cout << "Choice: " << std::endl;
     std::cin >> choix;
     move_man(S, choix);
-    S.print_board();
   }
   return 0;
 }
