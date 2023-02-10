@@ -271,7 +271,6 @@ void sok_board_t::load(char *_file) {
       if (read_ok) {
         board[board_nbl][nread - 1] = END_OF_LINE;
         board_nbl++;
-        std::cout << nread << std::endl;
       }
     }
   }
