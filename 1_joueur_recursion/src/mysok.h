@@ -107,6 +107,7 @@ void move_man(sok_board_t &S, int direction) {
       break;
     }
     // Si la prochaine case est une caisse alors on la pousse
+    // Si seulement c'est une case FREE ou TARGET
     if (get_coords_name(S, S.man1_x - 1, S.man1_y) == CRATE_ON_FREE) {
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == TARGET) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
@@ -119,6 +120,9 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_FREE;
       }
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == CRATE_ON_FREE) {
+        break;
+      }
+      if (get_coords_name(S, S.man1_x - 2, S.man1_y) == WALL) {
         break;
       }
     }
@@ -147,6 +151,9 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == CRATE_ON_FREE) {
         break;
       }
+      if (get_coords_name(S, S.man1_x + 2, S.man1_y) == WALL) {
+        break;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_x += 1;
@@ -172,6 +179,9 @@ void move_man(sok_board_t &S, int direction) {
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == CRATE_ON_FREE) {
         break;
       }
+      if (get_coords_name(S, S.man1_x, S.man1_y - 2) == WALL) {
+        break;
+      }
     }
     S.board[S.man1_x][S.man1_y] = FREE;
     S.man1_y -= 1;
@@ -195,6 +205,9 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_FREE;
       }
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == CRATE_ON_FREE) {
+        break;
+      }
+      if (get_coords_name(S, S.man1_x, S.man1_y + 2) == WALL) {
         break;
       }
     }
