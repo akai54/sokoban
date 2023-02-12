@@ -1,0 +1,32 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-std=c++11",
+      "-Wall",
+      "-O2",
+      "-o",
+      "r0",
+      "r0.cpp"
+    ],
+    "directory": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src",
+    "file": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src/r0.cpp",
+    "output": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src/r0"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-std=c++11",
+      "-Wall",
+      "-O2",
+      "-o",
+      "r0",
+      "mysok.h"
+    ],
+    "directory": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src",
+    "file": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src/mysok.h",
+    "output": "/media/beshoux/Eli1/study/S6/jeux/tp1/sokoban-2023/DLS_1/src/r0"
+  }
+]

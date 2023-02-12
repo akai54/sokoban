@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <stack>
 #include <string.h>
 #include <string>
 
@@ -46,15 +47,28 @@
 #define MAN2_ON_TARGET 9
 #define END_OF_LINE 10
 
+// Profondeur max pour DLS
+#define MAX_DEPTH 5000
+
 // Représentation en chaîne du grille de jeu
 char board_str[] = {' ', '_', '.', '#', '$', '*', '1', 'u', '2', 'd', 'a'};
 
 // Représentation en chaîne des mouvements
 std::string move_str[] = {"Up", "Down", "Left", "Right", "Wait"};
 
+// Stocker les positions du joueur actuel
+// Obligatoire si on veut utiliser undo_move
+struct State {
+  int man_x;
+  int man_y;
+  int nbr_crate;
+  int board[NBL][NBC];
+};
+
+std::stack<State> states;
+
 // Structure sok_board_t définissant un grille de jeu Sokoban
 struct sok_board_t {
-  bool seen[NBL][NBC]; // Cases visitees
   int board[NBL][NBC]; // grille de jeu
   int board_nbl;       // Nombre de lignes du grille
   int nbr_crates = 0;  // Nombres total des caisses
@@ -82,18 +96,13 @@ struct Crate {
 // Envoyer depuis la structure Crate
 Crate *crates = nullptr;
 
-// Renvoi si une case a deja ete visite
-bool isSquareVisited(const sok_board_t &S, int x, int y) {
-  return S.seen[x][y];
-}
-
 // Une fonction qui renvoie la valeur d'une case
 int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
 
 bool can_move(sok_board_t &S, int x, int y) {
   if (get_coords_name(S, x, y) == OUT || get_coords_name(S, x, y) == WALL ||
       get_coords_name(S, x, y) == CRATE_ON_TARGET ||
-      get_coords_name(S, x, y) == END_OF_LINE || isSquareVisited(S, x, y)) {
+      get_coords_name(S, x, y) == END_OF_LINE) {
     return false;
   } else if (get_coords_name(S, x, y) == CRATE_ON_FREE) {
     return true;
@@ -101,14 +110,16 @@ bool can_move(sok_board_t &S, int x, int y) {
   return true;
 }
 
-// Mettre les cases visites dans la liste seen
-// uniquement si on a reussi a pousser une caisse vers une case obj.
-void updateSeenArray(sok_board_t &S, int x, int y) {
-  S.seen[x][y] = true;
-  std::cout << "added to ban zone" << std::endl;
-}
-
 void move_man(sok_board_t &S, int direction) {
+  S.print_board();
+  // Store the current state of the game board and man's position
+  State current_state = {S.man1_x, S.man1_y, S.nbr_crates};
+  for (int i = 0; i < NBL; i++) {
+    for (int j = 0; j < NBC; j++) {
+      current_state.board[i][j] = S.board[i][j];
+    }
+  }
+  states.push(current_state);
   switch (direction) {
   case MOVE_U:
     if (can_move(S, S.man1_x - 1, S.man1_y) == false) {
@@ -122,7 +133,6 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
         S.nbr_crates--;
-        updateSeenArray(S, S.man1_x - 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == FREE) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
@@ -151,7 +161,6 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
         S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
         S.nbr_crates--;
-        updateSeenArray(S, S.man1_x + 1, S.man1_y);
       }
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == FREE) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
@@ -179,7 +188,6 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
         S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
         S.nbr_crates--;
-        updateSeenArray(S, S.man1_x, S.man1_y - 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == FREE) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
@@ -207,7 +215,6 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
         S.nbr_crates--;
-        updateSeenArray(S, S.man1_x, S.man1_y + 1);
       }
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == FREE) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
@@ -227,6 +234,73 @@ void move_man(sok_board_t &S, int direction) {
   }
 }
 
+// Si le dernier mouvmeent n'aboutit pas a un chemin valide.
+// On utilise la struct state definit en haut pour revenir en arriere.
+void undo_move(sok_board_t &S) {
+  if (!states.empty()) {
+    State previous_state = states.top();
+    S.man1_x = previous_state.man_x;
+    S.man1_y = previous_state.man_y;
+    S.nbr_crates = previous_state.nbr_crate;
+    for (int i = 0; i < NBL; i++) {
+      for (int j = 0; j < NBC; j++) {
+        S.board[i][j] = previous_state.board[i][j];
+      }
+    }
+    states.pop();
+  }
+}
+
+bool depth_limited_search(sok_board_t &S, int depth) {
+  // Si toutes les cases ont ete pousser alors on arrete
+  if (S.nbr_crates == 0)
+    return true;
+  // SI la profondeur definit est atteint on arrete
+  if (depth == 0)
+    return false;
+  // Iterer sur tout les mouvmenets possible.
+  for (int i = 0; i < 4; i++) {
+    int x = S.man1_x;
+    int y = S.man1_y;
+    switch (i) {
+    case MOVE_U:
+      x--;
+      break;
+    case MOVE_D:
+      x++;
+      break;
+    case MOVE_L:
+      y--;
+      break;
+    case MOVE_R:
+      y++;
+      break;
+    }
+    // Si le mouvmeent est possible
+    if (can_move(S, x, y)) {
+      // Alors on la fait
+      move_man(S, i);
+      // Rechercher une solution
+      if (depth_limited_search(S, depth - 1))
+        return true;
+      // Annuler le mouvmenet si aucun chemin n'est possible
+      undo_move(S);
+    }
+  }
+  return false;
+}
+
+bool iddfs(sok_board_t &S) {
+  // Demarrer avec une profondeur de 0, et ensuite augmenter
+  // jusqu'a ce qu'on atteine la limite etabli en haut
+  for (int depth = 0; depth < MAX_DEPTH; depth++) {
+    std::cout << "profondeur: " << depth << std::endl;
+    if (depth_limited_search(S, depth))
+      return true;
+  }
+  return false;
+}
+
 // Constructeur par défaut
 sok_board_t::sok_board_t() {
   // Initialiser le grille avec des cases libres
@@ -234,7 +308,6 @@ sok_board_t::sok_board_t() {
   for (int i = 0; i < NBL; i++)
     for (int j = 0; j < NBC; j++) {
       board[i][j] = FREE;
-      seen[i][j] = false;
     }
 }
 
