@@ -74,6 +74,7 @@ struct sok_board_t {
   int man2_y;          // Coordonnées du joueur 2 (y)
 
   deque<tuple<int, int>> crates_on_free;
+  deque<tuple<int, int>> targets;
 
   // Constructeur par défaut
   sok_board_t();
@@ -86,11 +87,9 @@ struct sok_board_t {
 
   void print_board_brut();
 
-  bool position_is_free(tuple<int, int> pos);
-  bool is_position_of_crate(tuple<int, int> pos);
-  bool legal_move_man_1(tuple<int, int> move);
   void path_to_the_goal();
   void print_crates_on_free_pos();
+  void print_targets();
 };
 
 // Constructeur par défaut
@@ -151,6 +150,7 @@ void sok_board_t::load(char *_file) {
           board[board_nbl][i] = FREE;
         } else if (line[i] == board_str[TARGET]) {
           board[board_nbl][i] = TARGET;
+          targets.push_back(make_tuple(board_nbl, i));
         } else if (line[i] == board_str[WALL]) {
           read_ok = true;
           board[board_nbl][i] = WALL;
@@ -205,24 +205,11 @@ bool position_exist_on_the_board(tuple<int, int> pos){
   return true;
 }
 
-tuple<int, int> apply_move_to_position(tuple<int, int> move, int x, int y){
-  return make_tuple(x + get<0>(move)
-                         ,y + get<1>(move));
+tuple<int, int> apply_move_to_position(tuple<int, int> move, tuple<int, int> my_pos){
+  return make_tuple(get<0>(my_pos) + get<0>(move)
+                         ,get<1>(my_pos) + get<1>(move));
 }
 
-bool sok_board_t::position_is_free(tuple<int, int> pos){
-  if (this -> board[get<0>(pos)][get<1>(pos)] == FREE){
-    return true;
-  }
-  return false;
-}
-
-bool sok_board_t::is_position_of_crate(tuple<int, int> pos){
-  if (this -> board[get<0>(pos)][get<1>(pos)] == CRATE_ON_FREE){
-    return true;
-  }
-  return false;
-}
 
 /* Algo pour les boites : 
 Il y a la position d'un boite en argument
@@ -245,14 +232,107 @@ tuple<int, int> make_move(tuple<int, int> current_pos, int my_move){
                     get<1>(current_pos) + get<1>(vector_of_move));
 }
 
+int dist(tuple<int, int> a, tuple<int, int> b){
+  // je met pas à la racine carré car on s'en fiche de la distance réelle, on veut juste savoir 
+  int res = pow((get<0>(b) - get<0>(a)), 2) + pow((get<1>(b) - get<1>(a)), 2);
+  return res;
+}
 
+bool is_position_free(tuple<int, int> pos, int board[NBL][NBC]){
+  return board[get<0>(pos)][get<1>(pos)] == FREE;
+}
+bool is_position_of_crate(tuple<int, int> pos, int board[NBL][NBC]){
+  return board[get<0>(pos)][get<1>(pos)] == CRATE_ON_FREE;
+}
+
+bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, int> my_new_pos, int board[NBL][NBC]){
+  if (!position_exist_on_the_board(my_new_pos)){
+    return false;
+  }
+
+  if (is_position_free(my_new_pos, board)){
+    return true;
+  }
+
+  if (is_position_of_crate(my_new_pos, board)){
+    // calcul de la nouvelle position du crate après le mouvement
+    tuple<int, int> new_pos_of_crate = apply_move_to_position(move, my_new_pos);
+
+    if (position_exist_on_the_board(new_pos_of_crate)){
+      if (is_position_free(new_pos_of_crate, board)){
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void copy_board(int to_copy[NBL][NBC], int where_copied[NBL][NBC]){
+  for (int l = 0; l < NBL; l++){
+    for (int c = 0; c < NBL; c++){
+      where_copied[l][c] = to_copy[l][c];
+    }
+  }
+}
+
+void make_move_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, tuple<int, int> my_new_pos, tuple<int, int> move){ 
+  // non testée 
+  if (my_board[get<1>(my_pos)][get<0>(my_pos)] == MAN1_ON_FREE){
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = FREE;
+  } else {
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = TARGET;
+  }
+  if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == FREE) {
+    // je suis pas sûr, j'ai fais la modif à la va vite : 
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = FREE;
+    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_FREE;
+  } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == CRATE_ON_FREE){
+    // remplir
+    // Il faut faire le déplacement aussi du crate du coup
+    // vérifier si la nouvelle case est une case on target
+  } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == CRATE_ON_TARGET)
+    // remplir
+  {
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = MAN1_ON_TARGET;
+  }
+}
+// osef du déplacement du crate, il faudrait faire en sorte de seulement renvoyer les déplacements du joueur 
+deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
+  if (current_pos == goal) { 
+    return path_to_the_goal;
+  }
+  int dist_with_goal = dist(current_pos, goal);
+
+  int my_new_board[NBL][NBC];
+  for (int direction = 0 ; direction < 5; direction++){
+    tuple<int, int> new_pos = make_move(current_pos, direction);
+    int more_near_pos = dist(new_pos, goal) < dist_with_goal;
+    auto is_legal = legal_move_man_1(move_in_vector[direction], current_pos, new_pos, my_board);
+    if (more_near_pos && is_legal) {
+      copy_board(my_board, my_new_board);
+      make_move_on_board(my_new_board, current_pos, new_pos, move_in_vector[direction]); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
+      path_to_the_goal.push_back(direction);
+      deque<int> res = a_star_man(new_pos, path_to_the_goal, goal, my_new_board);
+      if (!res.empty()){ // si les futurs move sont légaux
+        return res;
+      }
+      path_to_the_goal.pop_back();
+    }
+  }
+  printf("illegal move\n");
+
+  // aucun move n'est légal, ou alors aucun des futurs move ne l'est si on est arrivé jusque là
+  deque<int> vide;
+  return vide;
+}
 // tuple<int, int> crate_is_movable(tuple<int, int> current_pos, int my_move){
-bool crate_is_movable(tuple<int, int> current_pos, int my_move, int my_board[NBL][NBC]){
+bool crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int my_move, int my_board[NBL][NBC]){
   // il faut vérifier que le côté opposé de la position est accessible
   // il faudra améliorer cette fonction, en prenant en compte la précédente position théorique du joueur, et de s'il peut accéder à ce fameux côté opposé depuis là où il est
   tuple<int, int> vector_of_move = move_in_vector[my_move];
   int x_pos_opposite_of_move = get<0>(current_pos) + get<0>(vector_of_move) * -1;
   int y_pos_opposite_of_move = get<1>(current_pos) + get<1>(vector_of_move) * -1;
+
   // if (my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE) {
   //   cout << "crate is movable " << endl;
   // }else {
@@ -263,9 +343,9 @@ bool crate_is_movable(tuple<int, int> current_pos, int my_move, int my_board[NBL
   // cout << "my board at this pos : " << my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] << endl;
 
   // Attention ! j'ai peut-être inversé X et Y
-  return my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE;
+  return my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE ; // && a_star_man();
 }
-bool legal_move_crate(tuple<int, int> current_pos,tuple<int, int> new_pos, int my_move, int my_board[NBL][NBC]){
+bool legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple<int, int> new_pos, int my_move, int my_board[NBL][NBC]){
   // move illégal si la case du côté opposé est unreachable, faut utilisé current_pos et move
   // Si c'est reachable, alors la nouvelle case se doit d'être free, ça c'est new_pos
 
@@ -279,23 +359,26 @@ bool legal_move_crate(tuple<int, int> current_pos,tuple<int, int> new_pos, int m
   // }
 
 
-  return  my_new_pos_is_free && crate_is_movable(current_pos, my_move, my_board);
+  return  my_new_pos_is_free && crate_is_movable(man_pos, current_pos, my_move, my_board);
 }
 
 
-int dist(tuple<int, int> a, tuple<int, int> b){
-  // je met pas à la racine carré car on s'en fiche de la distance réelle, on veut juste savoir 
-  int res = pow((get<0>(b) - get<0>(a)), 2) + pow((get<1>(b) - get<1>(a)), 2);
-  return res;
-}
 
-void copy_board(int to_copy[NBL][NBC], int where_copied[NBL][NBC]){
-  for (int l = 0; l < NBL; l++){
-    for (int c = 0; c < NBL; c++){
-      where_copied[l][c] = to_copy[l][c];
-    }
-  }
-}
+
+/*
+  Que faire maintenant ? 
+J'ai besoin maintenant de calculer les déplacements du man
+Il faut test toutes les possibilités de mouvements possible
+En faite, déjà il faudrait être certain qu'il soit possible de faire les mouvements quand on est arrivé à destination
+Donc il faudrait rajouter une règle dans les legal_move qui vérifie si le joueur sera capable de bouger jusqu'au prochain mouvement
+Problème : ce mouvement peut inclure un déplacement de boite, ce qui fait qu'il va aussi falloir mettre à jour le tableau, et donc en créer des copies 
+
+Autre problème : peut-être qu'au final, c'était pas le bon mouvement car bien qu'il permette d'arrivé à destination, il bouge d'autres boites de manière à ce que ça fonctionne pas. Après, c'est pas si grave comme problème, car généralement, ça devrait pas poser problème, et au pire on en a au moins mis un certain nombre
+
+En vrai, à partir du moment où l'on a prouvé que c'est possible de bouger le crate jusqu'à destination, il suffit de prouver qu'on peut arrivé jusqu'à l'endroit souhaiter, et à partir de ce moment, on est sûr de pouvoir la mettre. Un autre problème se pose : peut-être que la position est inateignable. Est-ce possible ? Si en bougeant une boite, on la met devant la position où l'on doit aller, oui. Et si on interdit ce fait, il est possible que l'objectif soit inateignable, car il faut mettre la boite d'un autre point de départ, ou bien il faut en mettre une autre.  Et c'est sur ce point où je sais pas comment m'y prendre, si au final c'est impossible, comment faire pour trouver un autre path ? Ce qu'on peut faire, c'est faire la vérification au tout début, voir lors de l'appel de la fonction si un mouvement est légal, et comme condition qu'il soit légal est que le man puisse y accéder
+
+Donc ce que je pourrais faire, c'est d'abord voir un chemin 
+*/
 
 void print_pos(tuple<int, int> pos){
   cout << get<0>(pos) << ", " << get<1>(pos) << endl;
@@ -309,12 +392,21 @@ void print_path(deque<int> path) {
 }
 
 
-deque<int> a_star_crate(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
-  static int dir = 1;
+// modif à faire : il ne faut pas éliminer les mouvement moins près comme je le fais mais plutôt faire en priorité ceux qui sont le plus près
+// il faudrait donc deux boucle : la première où on filtre les coup interdit, et qu'on trie par priorité du plus près au moins près les coups légaux 
+// et une deuxième boucle où l'on réalise les mouvements
+// problème : un des critères de legal move est justement le fait des mouvements du man_1 permette le déplacement du crate
+// au pire pas grave, on filtre pas les coups interdit tant pis, on se contente juste de ranger les coups de manière bête et méchante
+// aussi, il faut interdire le coup inverse du précédent coup du coup, càd si le précédent coup est up, le prochain ne peux pas être down. C'est important comme règle car le mouvement devient inutile
+deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
+  // static int dir = 1;
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
   int dist_with_goal = dist(current_pos, goal);
+
+
+  int my_new_board[NBL][NBC];
   for (int direction = 0 ; direction < 5; direction++){
     tuple<int, int> new_pos = make_move(current_pos, direction);
     int more_near_pos = dist(new_pos, goal) < dist_with_goal;
@@ -327,7 +419,17 @@ deque<int> a_star_crate(tuple<int, int> current_pos, deque<int> path_to_the_goal
     // cout << "the distance : " << dist(current_pos, goal) << endl;
     // cout << "the new distance : " << dist(new_pos, goal) << endl;
     // cout << "is more near ? : " << more_near_pos << endl;
-    auto is_legal = legal_move_crate(current_pos, new_pos, direction, my_board);
+
+    // IL FAUT ENVOYER ICI LE PATH DU JOUEUR PAR REFERENCE
+    /* aussi, le déplacement du joueur est susceptible de modifié le tableau. Il y a plusieurs manière de régler le soucis.
+       la mise à jour du tableau on la fait ici ? Non, par contre il faut récupérer le tableau modifié pour l'appel récursif
+       Non car on est peut-être sur une "mauvaise" branche, donc il faut faire la modification du tableau uniquement lorsqu'on est sûr que ça fonctionne 
+       Par contre, du coup, je crois qu'il faudrait créer le board ici, non ? c'est pas le plus opti, on pourrait faire beaucoup plus opti en utilisant seulement une position virtuelle de la boite et du man mais azy osef, c'est pas non plus monstrueux en complexité spaciale (n, vu qu'on réutilise ) 
+       
+     */
+
+    copy_board(my_board, my_new_board);
+    auto is_legal = legal_move_crate(man_pos, current_pos, new_pos, direction, my_new_board);
     // cout << "is legal and more near? : " << (legal_move_crate(current_pos, new_pos, direction, my_board) && more_near_pos ) << endl;
     // cout << "is legal " << is_legal << endl;
     // cout << "more near ? " <<  more_near_pos<< endl;
@@ -346,8 +448,8 @@ deque<int> a_star_crate(tuple<int, int> current_pos, deque<int> path_to_the_goal
       // print_path(path_to_the_goal);
       // cout << "appel récursif" << endl;
       // cout << "direction " << direction <<  " numéro " << dir <<endl;
-      dir++;
-      deque<int> res = a_star_crate(new_pos, path_to_the_goal, goal, my_board);
+      // dir++;
+      deque<int> res = a_star_crate(man_pos, new_pos, path_to_the_goal, goal, my_board);
       // cout << "fin appel récursif" << endl;
       // opti réalisable : return le res avec la plus petite taille
       if (!res.empty()){ // si les futurs move sont légaux
@@ -367,9 +469,16 @@ deque<int> a_star_crate(tuple<int, int> current_pos, deque<int> path_to_the_goal
 deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, int my_board[NBL][NBC]){
   deque<int> path_to_the_goal;
   // tuple<int, int> goal = find_nearest_goal();
-  return a_star_crate(current_pos, path_to_the_goal, goal, my_board);
+  tuple<int, int> man_foo = make_tuple(0, 0);
+  return a_star_crate(man_foo, current_pos, path_to_the_goal, goal, my_board);
 }
 
+void sok_board_t::print_targets(){
+  for (auto const& pos: this -> targets){
+    cout << "x : " << get<0>(pos)<< ", y : " << get<1>(pos) << " | "; 
+  }
+  cout << endl;
+}
 void sok_board_t::print_crates_on_free_pos(){
   for (auto const& pos: this -> crates_on_free){
     cout << "x : " << get<0>(pos)<< ", y : " << get<1>(pos) << " | "; 
@@ -392,30 +501,13 @@ void sok_board_t::path_to_the_goal(){
     cout << "no soluce" << endl;
   }
   print_path(res);
+  cout << "crates : "<< endl;
   this -> print_crates_on_free_pos();
+  cout << "targets : " << endl;
+  this -> print_targets();
 }
 
 
-bool sok_board_t::legal_move_man_1(tuple<int, int> move){
-  tuple<int, int> new_pos = apply_move_to_position(move, this->man1_x, this->man1_y);
-  if (!position_exist_on_the_board(new_pos)){
-    return false;
-  }
-  if (this->position_is_free(new_pos)){
-    return true;
-  }
-  if (this->is_position_of_crate(new_pos)){
-    // calcul de la nouvelle position du crate après le mouvement
-    tuple<int, int> new_pos_of_crate = apply_move_to_position(move, get<0>(new_pos), get<1>(new_pos));
-
-    if (position_exist_on_the_board(new_pos_of_crate)){
-      if (this->position_is_free(new_pos_of_crate)){
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 #endif
 
