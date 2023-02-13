@@ -48,7 +48,7 @@
 #define END_OF_LINE 10
 
 // Profondeur max pour DLS
-#define MAX_DEPTH 5000
+#define MAX_DEPTH 8
 
 // Représentation en chaîne du grille de jeu
 char board_str[] = {' ', '_', '.', '#', '$', '*', '1', 'u', '2', 'd', 'a'};
@@ -63,6 +63,7 @@ struct State {
   int man_y;
   int nbr_crate;
   int board[NBL][NBC];
+  bool crate_pushed;
 };
 
 std::stack<State> states;
@@ -88,13 +89,13 @@ struct sok_board_t {
 };
 
 // Une structure qui va sauvegarder les coords des caisses.
-struct Crate {
+/* struct Crate {
   int x, y;
-};
+}; */
 
 // Une liste dynamique qui va stocker les coords
 // Envoyer depuis la structure Crate
-Crate *crates = nullptr;
+// Crate *crates = nullptr;
 
 // Une fonction qui renvoie la valeur d'une case
 int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
@@ -119,7 +120,6 @@ void move_man(sok_board_t &S, int direction) {
       current_state.board[i][j] = S.board[i][j];
     }
   }
-  states.push(current_state);
   switch (direction) {
   case MOVE_U:
     if (can_move(S, S.man1_x - 1, S.man1_y) == false) {
@@ -133,6 +133,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
         S.board[S.man1_x - 2][S.man1_y] = CRATE_ON_TARGET;
         S.nbr_crates--;
+        current_state.crate_pushed = true;
       }
       if (get_coords_name(S, S.man1_x - 2, S.man1_y) == FREE) {
         S.board[S.man1_x - 1][S.man1_y] = FREE;
@@ -161,6 +162,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
         S.board[S.man1_x + 2][S.man1_y] = CRATE_ON_TARGET;
         S.nbr_crates--;
+        current_state.crate_pushed = true;
       }
       if (get_coords_name(S, S.man1_x + 2, S.man1_y) == FREE) {
         S.board[S.man1_x + 1][S.man1_y] = FREE;
@@ -188,6 +190,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
         S.board[S.man1_x][S.man1_y - 2] = CRATE_ON_TARGET;
         S.nbr_crates--;
+        current_state.crate_pushed = true;
       }
       if (get_coords_name(S, S.man1_x, S.man1_y - 2) == FREE) {
         S.board[S.man1_x][S.man1_y - 1] = FREE;
@@ -215,6 +218,7 @@ void move_man(sok_board_t &S, int direction) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
         S.board[S.man1_x][S.man1_y + 2] = CRATE_ON_TARGET;
         S.nbr_crates--;
+        current_state.crate_pushed = true;
       }
       if (get_coords_name(S, S.man1_x, S.man1_y + 2) == FREE) {
         S.board[S.man1_x][S.man1_y + 1] = FREE;
@@ -232,6 +236,7 @@ void move_man(sok_board_t &S, int direction) {
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   }
+  states.push(current_state);
 }
 
 // Si le dernier mouvmeent n'aboutit pas a un chemin valide.
@@ -239,15 +244,17 @@ void move_man(sok_board_t &S, int direction) {
 void undo_move(sok_board_t &S) {
   if (!states.empty()) {
     State previous_state = states.top();
-    S.man1_x = previous_state.man_x;
-    S.man1_y = previous_state.man_y;
-    S.nbr_crates = previous_state.nbr_crate;
-    for (int i = 0; i < NBL; i++) {
-      for (int j = 0; j < NBC; j++) {
-        S.board[i][j] = previous_state.board[i][j];
+    if (!previous_state.crate_pushed) {
+      S.man1_x = previous_state.man_x;
+      S.man1_y = previous_state.man_y;
+      S.nbr_crates = previous_state.nbr_crate;
+      for (int i = 0; i < NBL; i++) {
+        for (int j = 0; j < NBC; j++) {
+          S.board[i][j] = previous_state.board[i][j];
+        }
       }
+      states.pop();
     }
-    states.pop();
   }
 }
 
@@ -357,15 +364,15 @@ void sok_board_t::load(char *_file) {
           // Stocker les coords dans la structure, avant de la
           // copier dans la liste qui va augmenter de taille
           // exactement a chaque nouvelle caisse lu.
-          Crate c = {board_nbl, i};
+          /* Crate c = {board_nbl, i};
           Crate *new_crates = new Crate[nbr_crates + 1];
           for (int i = 0; i < nbr_crates; i++) {
             new_crates[i] = crates[i];
           }
-          new_crates[nbr_crates] = c;
+          new_crates[nbr_crates] = c; */
           nbr_crates++;
-          delete[] crates;
-          crates = new_crates;
+          /* delete[] crates;
+          crates = new_crates; */
         } else if (line[i] == board_str[CRATE_ON_TARGET]) {
           board[board_nbl][i] = CRATE_ON_TARGET;
         } else if (line[i] == board_str[MAN1_ON_FREE]) {

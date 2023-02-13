@@ -10,18 +10,16 @@ int main(int _ac, char **_av) {
   S.load(_av[1]);
   std::cout << S.nbr_crates << std::endl;
 
-  // Call the IDDFS function
+  // Appel Depth Limited Search
   bool solved = iddfs(S);
 
   if (solved) {
     S.print_board();
     std::cout << "The puzzle was solved successfully." << std::endl;
-    std::cout << S.nbr_crates << std::endl;
-    std::cout << MAX_DEPTH << std::endl;
     // Gestion de memoire
     // Supprimer la liste qui stockait les coords
-    delete[] crates;
-    crates = nullptr;
+    /* delete[] crates;
+    crates = nullptr; */
     S.nbr_crates = 0;
 
   } else {
