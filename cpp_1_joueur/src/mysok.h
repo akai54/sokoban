@@ -22,6 +22,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <list>
 // La taille du grille de jeu
 #define NBL 20 // Nombre de lignes
 #define NBC 20 // Nombre de colonnes
@@ -398,17 +399,21 @@ typedef struct move_with_dist{
   int dist;
 } Move_with_dist;
 
-// trouver ici https://stackoverflow.com/questions/35840580/can-i-make-stdlist-insert-new-elements-with-order-or-got-to-use-stdsort
-void insert_with_sorting(list<Move_with_dist>& moves_priority, Moves_with_dist to_insert){
-  if (moves_with_dist.size() < 1){
+void fill_mwd(Move_with_dist& mwd, int my_move, int dist){
+  mwd.my_move = my_move;
+  mwd.dist = dist;
+}
+// inspiré d'ici https://stackoverflow.com/questions/35840580/can-i-make-stdlist-insert-new-elements-with-order-or-got-to-use-stdsort
+void insert_with_sorting(list<Move_with_dist>& moves_priority, Move_with_dist to_insert){
+  if (moves_priority.size() < 1){
     moves_priority.push_back(to_insert);
   } else {
     auto begin = moves_priority.begin();
     auto end = moves_priority.end();
-    while((begin != end) && (*begin.dist < to_insert.dist)) {
+    while((begin != end) && (begin -> dist < to_insert.dist)) {
       begin++;
     }
-    list.insert(begin, to_insert);
+    moves_priority.insert(begin, to_insert);
   }
 }
 // modif à faire : il ne faut pas éliminer les mouvement moins près comme je le fais mais plutôt faire en priorité ceux qui sont le plus près
@@ -423,21 +428,21 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
-  int dist_with_goal = dist(current_pos, goal);
+  // int dist_with_goal = dist(current_pos, goal);
   int my_new_board[NBL][NBC];
+  tuple<int, int> new_pos;
+  Move_with_dist mwd;
+  list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
   for (int direction = 0 ; direction < 5; direction++){
-    tuple<int, int> new_pos = make_move(current_pos, direction);
-    int more_near_pos = dist(new_pos, goal) < dist_with_goal;
-    // IL FAUT ENVOYER ICI LE PATH DU JOUEUR PAR REFERENCE
-    /* aussi, le déplacement du joueur est susceptible de modifié le tableau. Il y a plusieurs manière de régler le soucis.
-       la mise à jour du tableau on la fait ici ? Non, par contre il faut récupérer le tableau modifié pour l'appel récursif
-       Non car on est peut-être sur une "mauvaise" branche, donc il faut faire la modification du tableau uniquement lorsqu'on est sûr que ça fonctionne 
-       Par contre, du coup, je crois qu'il faudrait créer le board ici, non ? c'est pas le plus opti, on pourrait faire beaucoup plus opti en utilisant seulement une position virtuelle de la boite et du man mais azy osef, c'est pas non plus monstrueux en complexité spaciale (n, vu qu'on réutilise ) 
-     */
+    new_pos = make_move(current_pos, direction);
+    fill_mwd(mwd, direction, dist(new_pos, goal));
+    insert_with_sorting(sorted_move, mwd);
+  }
+  for (Move_with_dist move : sorted_move){
     copy_board(my_board, my_new_board);
-    auto is_legal = legal_move_crate(man_pos, current_pos, new_pos, direction, my_new_board);
-    if (more_near_pos && is_legal) {
-      path_to_the_goal.push_back(direction);
+    bool is_legal = legal_move_crate(man_pos, current_pos, new_pos, move.my_move, my_new_board);
+    if (is_legal) {
+      path_to_the_goal.push_back(move.my_move);
       deque<int> res = a_star_crate(man_pos, new_pos, path_to_the_goal, goal, my_board);
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
@@ -445,6 +450,26 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
       path_to_the_goal.pop_back();
     }
   }
+  // for (int direction = 0 ; direction < 5; direction++){
+  //   tuple<int, int> new_pos = make_move(current_pos, direction);
+  //   int more_near_pos = dist(new_pos, goal) < dist_with_goal;
+  //   // IL FAUT ENVOYER ICI LE PATH DU JOUEUR PAR REFERENCE
+  //   /* aussi, le déplacement du joueur est susceptible de modifié le tableau. Il y a plusieurs manière de régler le soucis.
+  //      la mise à jour du tableau on la fait ici ? Non, par contre il faut récupérer le tableau modifié pour l'appel récursif
+  //      Non car on est peut-être sur une "mauvaise" branche, donc il faut faire la modification du tableau uniquement lorsqu'on est sûr que ça fonctionne 
+  //      Par contre, du coup, je crois qu'il faudrait créer le board ici, non ? c'est pas le plus opti, on pourrait faire beaucoup plus opti en utilisant seulement une position virtuelle de la boite et du man mais azy osef, c'est pas non plus monstrueux en complexité spaciale (n, vu qu'on réutilise ) 
+  //    */
+  //   copy_board(my_board, my_new_board);
+  //   auto is_legal = legal_move_crate(man_pos, current_pos, new_pos, direction, my_new_board);
+  //   if (more_near_pos && is_legal) {
+  //     path_to_the_goal.push_back(direction);
+  //     deque<int> res = a_star_crate(man_pos, new_pos, path_to_the_goal, goal, my_board);
+  //     if (!res.empty()){ // si les futurs move sont légaux
+  //       return res;
+  //     }
+  //     path_to_the_goal.pop_back();
+  //   }
+  // }
   printf("illegal move\n");
 
   // aucun move n'est légal, ou alors aucun des futurs move ne l'est si on est arrivé jusque là
