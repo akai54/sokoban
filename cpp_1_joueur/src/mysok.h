@@ -20,7 +20,8 @@
 #include <tuple>
 #include <deque>
 #include <vector>
-#include<cmath>
+#include <cmath>
+#include <algorithm>
 // La taille du grille de jeu
 #define NBL 20 // Nombre de lignes
 #define NBC 20 // Nombre de colonnes
@@ -391,70 +392,54 @@ void print_path(deque<int> path) {
   cout << endl << endl;
 }
 
+// to test 
+typedef struct move_with_dist{
+  int my_move;
+  int dist;
+} Move_with_dist;
 
+// trouver ici https://stackoverflow.com/questions/35840580/can-i-make-stdlist-insert-new-elements-with-order-or-got-to-use-stdsort
+void insert_with_sorting(list<Move_with_dist>& moves_priority, Moves_with_dist to_insert){
+  if (moves_with_dist.size() < 1){
+    moves_priority.push_back(to_insert);
+  } else {
+    auto begin = moves_priority.begin();
+    auto end = moves_priority.end();
+    while((begin != end) && (*begin.dist < to_insert.dist)) {
+      begin++;
+    }
+    list.insert(begin, to_insert);
+  }
+}
 // modif à faire : il ne faut pas éliminer les mouvement moins près comme je le fais mais plutôt faire en priorité ceux qui sont le plus près
 // il faudrait donc deux boucle : la première où on filtre les coup interdit, et qu'on trie par priorité du plus près au moins près les coups légaux 
 // et une deuxième boucle où l'on réalise les mouvements
 // problème : un des critères de legal move est justement le fait des mouvements du man_1 permette le déplacement du crate
 // au pire pas grave, on filtre pas les coups interdit tant pis, on se contente juste de ranger les coups de manière bête et méchante
 // aussi, il faut interdire le coup inverse du précédent coup du coup, càd si le précédent coup est up, le prochain ne peux pas être down. C'est important comme règle car le mouvement devient inutile
+// en faite, pas besoin d'annuler les previous move, dans tout les cas si c'est un mauvais coup, il est mis en bas dans la priorité, et dans certain car ça pourrait être utile peut-êtr edonc pas grave
 deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
   // static int dir = 1;
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
   int dist_with_goal = dist(current_pos, goal);
-
-
   int my_new_board[NBL][NBC];
   for (int direction = 0 ; direction < 5; direction++){
     tuple<int, int> new_pos = make_move(current_pos, direction);
     int more_near_pos = dist(new_pos, goal) < dist_with_goal;
-    // cout << "pos : ";
-    // print_pos(current_pos);
-    // cout << "new pos : ";
-    // print_pos(new_pos);
-    // cout << "goal : ";
-    // print_pos(goal);
-    // cout << "the distance : " << dist(current_pos, goal) << endl;
-    // cout << "the new distance : " << dist(new_pos, goal) << endl;
-    // cout << "is more near ? : " << more_near_pos << endl;
-
     // IL FAUT ENVOYER ICI LE PATH DU JOUEUR PAR REFERENCE
     /* aussi, le déplacement du joueur est susceptible de modifié le tableau. Il y a plusieurs manière de régler le soucis.
        la mise à jour du tableau on la fait ici ? Non, par contre il faut récupérer le tableau modifié pour l'appel récursif
        Non car on est peut-être sur une "mauvaise" branche, donc il faut faire la modification du tableau uniquement lorsqu'on est sûr que ça fonctionne 
        Par contre, du coup, je crois qu'il faudrait créer le board ici, non ? c'est pas le plus opti, on pourrait faire beaucoup plus opti en utilisant seulement une position virtuelle de la boite et du man mais azy osef, c'est pas non plus monstrueux en complexité spaciale (n, vu qu'on réutilise ) 
-       
      */
-
     copy_board(my_board, my_new_board);
     auto is_legal = legal_move_crate(man_pos, current_pos, new_pos, direction, my_new_board);
-    // cout << "is legal and more near? : " << (legal_move_crate(current_pos, new_pos, direction, my_board) && more_near_pos ) << endl;
-    // cout << "is legal " << is_legal << endl;
-    // cout << "more near ? " <<  more_near_pos<< endl;
-    // cout << "my_move :  " << direction << endl;
-    // cout << "---"<< endl;
     if (more_near_pos && is_legal) {
-      // cout << "entrée " <<  endl;
-      // cout << "dist pos : " << dist_with_goal << endl;
-      // cout << "dist newpos : " << dist(new_pos, goal) << endl;
-      // cout << "---"<< endl;
-      // copy_board(my_board, my_new_board);
-      // cout << "direction " << direction <<  endl;
-      // print_path(path_to_the_goal);
       path_to_the_goal.push_back(direction);
-      // cout << "ajout de la direction : " << endl;
-      // print_path(path_to_the_goal);
-      // cout << "appel récursif" << endl;
-      // cout << "direction " << direction <<  " numéro " << dir <<endl;
-      // dir++;
       deque<int> res = a_star_crate(man_pos, new_pos, path_to_the_goal, goal, my_board);
-      // cout << "fin appel récursif" << endl;
-      // opti réalisable : return le res avec la plus petite taille
       if (!res.empty()){ // si les futurs move sont légaux
-
-        // printf("legal move\n");
         return res;
       }
       path_to_the_goal.pop_back();
