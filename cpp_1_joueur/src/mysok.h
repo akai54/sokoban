@@ -127,6 +127,29 @@ void sok_board_t::print_board() {
   }
 }
 
+void print_a_board(int board[NBL][NBC]) {
+
+  cout << "début" <<endl;
+  for (int i = 0; i < NBL; i++) {
+    for (int j = 0; j < NBC; j++) {
+      if (board[i][j] == END_OF_LINE) // Si fin, sortir de la boucle
+        break;
+      // Sinon afficher la case actuelle
+      printf("%d", board[i][j]);
+    }
+    printf("\n");
+  }
+  cout << "fin" <<endl;
+  // for (int i = 0; i < NBL; i++) {
+  //   for (int j = 0; j < NBC; j++) {
+  //     if (board[i][j] == END_OF_LINE) // Si fin, sortir de la boucle
+  //       break;
+  //     // Sinon afficher la case actuelle
+  //     printf("%c", board_str[board[i][j]]);
+  //   }
+  //   printf("\n");
+  // }
+}
 // Charge la grille à partir d'un fichier
 void sok_board_t::load(char *_file) {
   FILE *fp = fopen(_file, "r"); // Ouvre le fichier en mode lecture
@@ -212,6 +235,40 @@ tuple<int, int> apply_move_to_position(tuple<int, int> move, tuple<int, int> my_
                          ,get<1>(my_pos) + get<1>(move));
 }
 
+// to test 
+typedef struct move_with_dist{
+  int my_move;
+  tuple<int, int> new_pos;
+  int dist;
+} Move_with_dist;
+
+void fill_mwd(Move_with_dist& mwd, int my_move, int dist, tuple<int, int> new_pos){
+  mwd.my_move = my_move;
+  mwd.dist = dist;
+  mwd.new_pos = new_pos;
+}
+// inspiré d'ici https://stackoverflow.com/questions/35840580/can-i-make-stdlist-insert-new-elements-with-order-or-got-to-use-stdsort
+void insert_with_sorting(list<Move_with_dist>& moves_priority, Move_with_dist to_insert){
+  if (moves_priority.size() < 1){
+    moves_priority.push_back(to_insert);
+  } else {
+    auto begin = moves_priority.begin();
+    auto end = moves_priority.end();
+    while((begin != end) && (begin -> dist < to_insert.dist)) {
+      begin++;
+    }
+    moves_priority.insert(begin, to_insert);
+  }
+}
+
+
+void print_list_move(list<Move_with_dist>& moves_priority){
+  for (auto i : moves_priority){
+    cout << "my move : "<< i.my_move << endl;
+    cout << "dist : "<< i.dist << endl;
+    cout << "---" << endl;
+  }
+}
 
 /* Algo pour les boites : 
 Il y a la position d'un boite en argument
@@ -271,56 +328,97 @@ bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, i
 
 void copy_board(int to_copy[NBL][NBC], int where_copied[NBL][NBC]){
   for (int l = 0; l < NBL; l++){
-    for (int c = 0; c < NBL; c++){
+    for (int c = 0; c < NBC; c++){
       where_copied[l][c] = to_copy[l][c];
     }
   }
 }
+void make_move_crate_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, int move){
+  if (my_board[get<1>(my_pos)][get<0>(my_pos)] == CRATE_ON_FREE){
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = FREE;
+  } else if (my_board[get<1>(my_pos)][get<0>(my_pos)] == CRATE_ON_FREE) {
+    my_board[get<1>(my_pos)][get<0>(my_pos)] = TARGET;
+  }
 
-void make_move_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, tuple<int, int> my_new_pos, tuple<int, int> move){ 
+  tuple<int, int> my_new_pos= make_move(my_pos, move);
+  // if (!position_exist_on_the_board(my_new_pos)){
+  //   cout << "x : " << get<0>(my_new_pos) <<", y : "<< get<1>(my_new_pos) << endl;
+  //   exit(1);
+  // }
+  if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == FREE){
+    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = CRATE_ON_FREE;
+  } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == TARGET) {
+    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = CRATE_ON_TARGET;
+  }
+
+}
+
+void make_move_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, tuple<int, int> my_new_pos, int my_index_move){ 
+  tuple<int, int> move = move_in_vector[my_index_move];
   // non testée 
   if (my_board[get<1>(my_pos)][get<0>(my_pos)] == MAN1_ON_FREE){
     my_board[get<1>(my_pos)][get<0>(my_pos)] = FREE;
   } else {
     my_board[get<1>(my_pos)][get<0>(my_pos)] = TARGET;
   }
+
   if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == FREE) {
     // je suis pas sûr, j'ai fais la modif à la va vite : 
-    my_board[get<1>(my_pos)][get<0>(my_pos)] = FREE;
     my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_FREE;
   } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == CRATE_ON_FREE){
-    // remplir
-    // Il faut faire le déplacement aussi du crate du coup
-    // vérifier si la nouvelle case est une case on target
+
+    make_move_crate_on_board(my_board, my_new_pos, my_index_move);
+    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_FREE;
   } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == CRATE_ON_TARGET)
-    // remplir
   {
-    my_board[get<1>(my_pos)][get<0>(my_pos)] = MAN1_ON_TARGET;
+    make_move_crate_on_board(my_board, my_new_pos, my_index_move);
+    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_TARGET;
   }
 }
+
 // osef du déplacement du crate, il faudrait faire en sorte de seulement renvoyer les déplacements du joueur 
 deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
-  int dist_with_goal = dist(current_pos, goal);
-
   int my_new_board[NBL][NBC];
-  for (int direction = 0 ; direction < 5; direction++){
-    tuple<int, int> new_pos = make_move(current_pos, direction);
-    int more_near_pos = dist(new_pos, goal) < dist_with_goal;
-    auto is_legal = legal_move_man_1(move_in_vector[direction], current_pos, new_pos, my_board);
-    if (more_near_pos && is_legal) {
+  tuple<int, int> new_pos;
+  Move_with_dist mwd;
+  list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
+  for (int direction = 0 ; direction < 4; direction++){
+    new_pos = make_move(current_pos, direction);
+    fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
+    insert_with_sorting(sorted_move, mwd);
+  }
+
+  for (Move_with_dist move : sorted_move){
+    bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
+    if (is_legal) {
       copy_board(my_board, my_new_board);
-      make_move_on_board(my_new_board, current_pos, new_pos, move_in_vector[direction]); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
-      path_to_the_goal.push_back(direction);
-      deque<int> res = a_star_man(new_pos, path_to_the_goal, goal, my_new_board);
+      make_move_on_board(my_new_board, current_pos, move.new_pos, move.my_move); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
+      path_to_the_goal.push_back(move.my_move);
+      deque<int> res = a_star_man(move.new_pos, path_to_the_goal, goal, my_new_board);
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
       }
       path_to_the_goal.pop_back();
     }
   }
+  // for (int direction = 0 ; direction < 5; direction++){
+  //   tuple<int, int> new_pos = make_move(current_pos, direction);
+  //   int more_near_pos = dist(new_pos, goal) < dist_with_goal;
+  //   auto is_legal = legal_move_man_1(move_in_vector[direction], current_pos, new_pos, my_board);
+  //   if (more_near_pos && is_legal) {
+  //     copy_board(my_board, my_new_board);
+  //     make_move_on_board(my_new_board, current_pos, new_pos, move_in_vector[direction]); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
+  //     path_to_the_goal.push_back(direction);
+  //     deque<int> res = a_star_man(new_pos, path_to_the_goal, goal, my_new_board);
+  //     if (!res.empty()){ // si les futurs move sont légaux
+  //       return res;
+  //     }
+  //     path_to_the_goal.pop_back();
+  //   }
+  // }
   printf("illegal move\n");
 
   // aucun move n'est légal, ou alors aucun des futurs move ne l'est si on est arrivé jusque là
@@ -334,18 +432,25 @@ bool crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int 
   tuple<int, int> vector_of_move = move_in_vector[my_move];
   int x_pos_opposite_of_move = get<0>(current_pos) + get<0>(vector_of_move) * -1;
   int y_pos_opposite_of_move = get<1>(current_pos) + get<1>(vector_of_move) * -1;
+  deque<int> path_to_the_goal;
 
-  // if (my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE) {
-  //   cout << "crate is movable " << endl;
-  // }else {
-  //   cout << "crate is  not movable : " <<  my_board[y_pos_opposite_of_move][x_pos_opposite_of_move]  << endl;
+  tuple<int, int> goal_for_man = make_tuple(x_pos_opposite_of_move, y_pos_opposite_of_move);
+  // auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board);
+  // if (path_of_man.size() == 0){
+  //   return false;
   // }
+
+  if (my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET) {
+    cout << "crate is movable " << endl;
+  }else {
+    cout << "crate is  not movable : " <<  my_board[y_pos_opposite_of_move][x_pos_opposite_of_move]  << endl;
+  }
   // cout << "x_pos_opposite_of_move : " << x_pos_opposite_of_move << endl;
   // cout << "y_pos_opposite_of_move : " << y_pos_opposite_of_move << endl;
   // cout << "my board at this pos : " << my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] << endl;
 
   // Attention ! j'ai peut-être inversé X et Y
-  return my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE ; // && a_star_man();
+  return my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET; // && a_star_man();
 }
 bool legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple<int, int> new_pos, int my_move, int my_board[NBL][NBC]){
   // move illégal si la case du côté opposé est unreachable, faut utilisé current_pos et move
@@ -353,12 +458,12 @@ bool legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple
 
 
   // Attention ! j'ai peut-être inversé les deux get<X>
-  bool my_new_pos_is_free = my_board[get<1>(new_pos)][get<0>(new_pos)] == FREE;
-  // if (my_new_pos_is_free) {
-  //   cout << "new pos free " << endl;
-  // } else {
-  //   cout << "new pos not free : " <<  my_board[get<1>(new_pos)][get<0>(new_pos)]<< endl;
-  // }
+  bool my_new_pos_is_free = my_board[get<1>(new_pos)][get<0>(new_pos)] == FREE || my_board[get<1>(new_pos)][get<0>(new_pos)] == TARGET;
+  if (my_new_pos_is_free) {
+    cout << "new pos free " << endl;
+  } else {
+    cout << "new pos not free : " <<  my_board[get<1>(new_pos)][get<0>(new_pos)]<< endl;
+  }
 
 
   return  my_new_pos_is_free && crate_is_movable(man_pos, current_pos, my_move, my_board);
@@ -393,29 +498,7 @@ void print_path(deque<int> path) {
   cout << endl << endl;
 }
 
-// to test 
-typedef struct move_with_dist{
-  int my_move;
-  int dist;
-} Move_with_dist;
 
-void fill_mwd(Move_with_dist& mwd, int my_move, int dist){
-  mwd.my_move = my_move;
-  mwd.dist = dist;
-}
-// inspiré d'ici https://stackoverflow.com/questions/35840580/can-i-make-stdlist-insert-new-elements-with-order-or-got-to-use-stdsort
-void insert_with_sorting(list<Move_with_dist>& moves_priority, Move_with_dist to_insert){
-  if (moves_priority.size() < 1){
-    moves_priority.push_back(to_insert);
-  } else {
-    auto begin = moves_priority.begin();
-    auto end = moves_priority.end();
-    while((begin != end) && (begin -> dist < to_insert.dist)) {
-      begin++;
-    }
-    moves_priority.insert(begin, to_insert);
-  }
-}
 // modif à faire : il ne faut pas éliminer les mouvement moins près comme je le fais mais plutôt faire en priorité ceux qui sont le plus près
 // il faudrait donc deux boucle : la première où on filtre les coup interdit, et qu'on trie par priorité du plus près au moins près les coups légaux 
 // et une deuxième boucle où l'on réalise les mouvements
@@ -424,7 +507,8 @@ void insert_with_sorting(list<Move_with_dist>& moves_priority, Move_with_dist to
 // aussi, il faut interdire le coup inverse du précédent coup du coup, càd si le précédent coup est up, le prochain ne peux pas être down. C'est important comme règle car le mouvement devient inutile
 // en faite, pas besoin d'annuler les previous move, dans tout les cas si c'est un mauvais coup, il est mis en bas dans la priorité, et dans certain car ça pourrait être utile peut-êtr edonc pas grave
 deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
-  // static int dir = 1;
+  cout << "seg ?" << endl;
+  static int dir = 1;
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
@@ -433,17 +517,41 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   tuple<int, int> new_pos;
   Move_with_dist mwd;
   list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
-  for (int direction = 0 ; direction < 5; direction++){
+  for (int direction = 0 ; direction < 4; direction++){
     new_pos = make_move(current_pos, direction);
-    fill_mwd(mwd, direction, dist(new_pos, goal));
+    fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
     insert_with_sorting(sorted_move, mwd);
   }
+  print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
     copy_board(my_board, my_new_board);
-    bool is_legal = legal_move_crate(man_pos, current_pos, new_pos, move.my_move, my_new_board);
+
+    bool is_legal = legal_move_crate(man_pos, current_pos, move.new_pos, move.my_move, my_new_board);
     if (is_legal) {
+      // if (move.my_move != 4){
+      //   cout << "sortient ! " <<  move.my_move<< endl;
+      //   exit(1);
+      // }
+      cout << "legalent " << endl;
+    cout << "commencement du print " << endl;
+      print_a_board(my_new_board);
+    cout << "fin du print " << endl;
+      make_move_crate_on_board(my_new_board, current_pos, move.my_move);
+      cout << "le move : " << move.my_move << endl;
+    cout << "commencement du print " << endl;
+      print_a_board(my_new_board);
+    cout << "fin du print " << endl;
+      // exit(1);
+      cout << "moved " << endl;
+      // print_a_board(my_new_board);
       path_to_the_goal.push_back(move.my_move);
-      deque<int> res = a_star_crate(man_pos, new_pos, path_to_the_goal, goal, my_board);
+      cout << "addent" << endl;
+      cout << "addent 2" << endl;
+      // dir++;
+      // cout << "val : " << dir << endl;
+      // cout << "new pos (x, y) : " << get<0>(new_pos) << ", " << get<1>(new_pos)<< endl;
+      deque<int> res = a_star_crate(man_pos, move.new_pos, path_to_the_goal, goal, my_board);
+      cout << "res" << endl;
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
       }
@@ -483,6 +591,14 @@ deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, 
   return a_star_crate(man_foo, current_pos, path_to_the_goal, goal, my_board);
 }
 
+
+// il me faut une fonction qui prend la position de tout les crates, regarde la distance avec la case objectif la plus éloignée, et enregistre ça dans une struct
+// ensuite, on range ça dans une liste par ordre de distance minimum
+// ensuite, on sélectionne le crate avec la plus petite distance
+// on regarde si elle peut atteindre l'objectif le plus lointain (ça renvoie la liste de mouvement du man à partir de la case adjacente au crate de départ). Si oui, on calcule le déplacement du joueur jusqu'à la case objectif
+// en faite, on peut faire les deux en même temps, il faut passé la case de départ du joueur, et normalement le legal move calcule tout seul si c'est possible d'y aller. L'avantage et que on peut tester pour plusieur case adjacente de départ différente facilement
+// ça doit nous renvoyer plusieurs info : la suite de mouvement du man, ainsi que sa position à la fin, et nouveau tableau (à moins qu'il soit automatiquement modifié dans la fonction)
+
 void sok_board_t::print_targets(){
   for (auto const& pos: this -> targets){
     cout << "x : " << get<0>(pos)<< ", y : " << get<1>(pos) << " | "; 
@@ -496,13 +612,18 @@ void sok_board_t::print_crates_on_free_pos(){
   cout << endl;
 }
 void sok_board_t::path_to_the_goal(){
-  int x = 5; 
-  int y = 7; 
+
+  int x = 1; 
+  int y = 3; 
+  // int x = 5; 
+  // int y = 7; 
   tuple<int, int> current_pos = {x, y};
-  tuple<int, int> goal = {15, 6};
+
+  tuple<int, int> goal = {1, 4};
+  // tuple<int, int> goal = {15, 6};
   // il faudrait ici faire une copy du board et ensuite l'envoyer, car on modifie juste pour obtenir le path mais on veut pas le modifier en soit, mais là pas grave c'est pour des test
-  this -> board[y][x] = FREE;
-  this -> board[7][15] = FREE;
+  // this -> board[y][x] = FREE;
+  // this -> board[7][15] = FREE;
   this -> print_board ();
   // exit(1);
   auto res = a_star_crate_init(current_pos, goal, this -> board);
