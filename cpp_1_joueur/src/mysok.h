@@ -398,6 +398,7 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
 
     bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
     if (is_legal) {
+      cout << "legal move number : " << move.my_move << endl;
       copy_board(my_board, my_new_board);
       make_move_on_board(my_new_board, current_pos, move.new_pos, move.my_move); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
       path_to_the_goal.push_back(move.my_move);
