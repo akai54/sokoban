@@ -92,6 +92,9 @@ struct sok_board_t {
   void path_to_the_goal();
   void print_crates_on_free_pos();
   void print_targets();
+  void print_pos_man1();
+
+  void set_new_pos_man1(tuple<int, int> new_pos);
 };
 
 // Constructeur par défaut
@@ -100,6 +103,10 @@ sok_board_t::sok_board_t() {
   for (int i = 0; i < NBL; i++)
     for (int j = 0; j < NBC; j++)
       board[i][j] = FREE;
+}
+
+void sok_board_t::print_pos_man1(){
+  cout << "pos man1, x : " << this -> man1_x << ", y : " << this -> man1_y << endl;
 }
 
 void sok_board_t::print_board_brut(){
@@ -541,11 +548,16 @@ void push_deque_in_deque (deque<int>& my_deque, deque<int>& deque_to_add){
 }
 
 void make_moves_on_board(tuple<int, int>& man_pos, deque<int> my_moves, int my_board[NBL][NBC]){
+  cout << "DEBUT" << endl;
   for (int my_move : my_moves){
     tuple<int, int> new_pos = make_move(man_pos, my_move);
     make_move_on_board(my_board, man_pos, new_pos, my_move);
     man_pos = new_pos;
+    cout << "the move : " << my_move << endl;
+      
+    print_a_board(my_board);
   }
+  cout << "FIN" << endl;
 }
 deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
   cout << "seg ?" << endl;
@@ -659,13 +671,19 @@ void sok_board_t::print_crates_on_free_pos(){
   }
   cout << endl;
 }
+
+void sok_board_t::set_new_pos_man1(tuple<int, int> new_pos){
+  this -> man1_x = get<0>(new_pos);
+    this -> man1_y = get<1>(new_pos);
+}
 void sok_board_t::path_to_the_goal(){
 
-  int x = 1; 
-  int y = 3; 
+
+  // int x = 1; 
+  // int y = 3; 
   // int x = 5; 
   // int y = 7; 
-  tuple<int, int> current_pos = {x, y};
+  tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
 
   tuple<int, int> goal = {1, 4};
   // tuple<int, int> goal = {15, 6};
@@ -679,11 +697,18 @@ void sok_board_t::path_to_the_goal(){
   if (res.empty()){
     cout << "no soluce" << endl;
   }
+  this -> print_board ();
   print_path(res);
-  cout << "crates : "<< endl;
-  this -> print_crates_on_free_pos();
-  cout << "targets : " << endl;
-  this -> print_targets();
+  this -> print_pos_man1();
+  make_moves_on_board(current_pos, res, this -> board);
+  // this -> set_new_pos_man1(current_pos);
+  // this -> print_pos_man1();
+
+  this -> print_board ();
+  // cout << "crates : "<< endl;
+  // this -> print_crates_on_free_pos();
+  // cout << "targets : " << endl;
+  // this -> print_targets();
 }
 
 
