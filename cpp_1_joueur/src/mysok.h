@@ -266,6 +266,7 @@ void print_list_move(list<Move_with_dist>& moves_priority){
   for (auto i : moves_priority){
     cout << "my move : "<< i.my_move << endl;
     cout << "dist : "<< i.dist << endl;
+    cout << "newpos x : "<< get<0>(i.new_pos)<< ", y :" << get<1>(i.new_pos) << endl;
     cout << "---" << endl;
   }
 }
@@ -298,18 +299,21 @@ int dist(tuple<int, int> a, tuple<int, int> b){
 }
 
 bool is_position_free(tuple<int, int> pos, int board[NBL][NBC]){
-  return board[get<0>(pos)][get<1>(pos)] == FREE;
+  cout << "la position x = " << get<0>(pos) << ", y = " << get<1>(pos)<< " est libre ? " << board[get<1>(pos)][get<0>(pos)] << endl;
+  return board[get<1>(pos)][get<0>(pos)] == FREE;
 }
 bool is_position_of_crate(tuple<int, int> pos, int board[NBL][NBC]){
-  return board[get<0>(pos)][get<1>(pos)] == CRATE_ON_FREE;
+  return board[get<1>(pos)][get<0>(pos)] == CRATE_ON_FREE;
 }
 
 bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, int> my_new_pos, int board[NBL][NBC]){
   if (!position_exist_on_the_board(my_new_pos)){
+    cout << "position n'existe pas sur le board" << endl;
     return false;
   }
 
   if (is_position_free(my_new_pos, board)){
+    cout << "position est libre" << endl;
     return true;
   }
 
@@ -323,6 +327,8 @@ bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, i
       }
     }
   }
+
+ cout << "jusque là ? chelou" << endl;
   return false;
 }
 
@@ -394,11 +400,15 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
   cout << "current pos x : " << get<0>(current_pos) << ", y : "<< get<1>(current_pos) << endl;
   cout << "man : " << endl;
   print_list_move(sorted_move);
+  // print_a_board(my_board);
   for (Move_with_dist move : sorted_move){
+    
 
     bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
+    cout << move.my_move << " is legal ? " << is_legal << endl;
     if (is_legal) {
-      cout << "legal move number : " << move.my_move << endl;
+      cout << "LEGAL move number : " << move.my_move << endl;
+      // exit(1);
       copy_board(my_board, my_new_board);
       make_move_on_board(my_new_board, current_pos, move.new_pos, move.my_move); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
       path_to_the_goal.push_back(move.my_move);
@@ -444,6 +454,7 @@ tuple<bool, deque<int>> crate_is_movable(tuple<int, int> man_pos, tuple<int, int
   int y_pos_opposite_of_move = get<1>(current_pos) + get<1>(vector_of_move) * -1;
   deque<int> path_to_the_goal;
 
+  // print_a_board(my_board);
   tuple<int, int> goal_for_man = make_tuple(x_pos_opposite_of_move, y_pos_opposite_of_move);
   auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board);
   if (path_of_man.size() == 0){
@@ -555,11 +566,12 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
 
+
+    copy_board(my_board, my_new_board);
     tuple<int, deque<int>> is_legal_and_man_path = legal_move_crate(man_pos, current_pos, move.new_pos, move.my_move, my_new_board);
     bool is_legal = get<0>(is_legal_and_man_path);
     deque<int> man_path = get<1>(is_legal_and_man_path);
     if (is_legal) {
-    copy_board(my_board, my_new_board);
       // if (move.my_move != 4){
       //   cout << "sortient ! " <<  move.my_move<< endl;
       //   exit(1);
