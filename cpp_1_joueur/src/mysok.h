@@ -390,8 +390,12 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
     fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
     insert_with_sorting(sorted_move, mwd);
   }
-
+  cout << "ùùùùùùùùùùùùùùùùùùùù" << endl;
+  cout << "current pos x : " << get<0>(current_pos) << ", y : "<< get<1>(current_pos) << endl;
+  cout << "man : " << endl;
+  print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
+
     bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
     if (is_legal) {
       copy_board(my_board, my_new_board);
@@ -425,8 +429,13 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
   deque<int> vide;
   return vide;
 }
+void print_deque(deque<int> my_deque){
+  for (auto el : my_deque) {
+    cout << el << endl;
+  }
+}
 // tuple<int, int> crate_is_movable(tuple<int, int> current_pos, int my_move){
-bool crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int my_move, int my_board[NBL][NBC]){
+tuple<bool, deque<int>> crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int my_move, int my_board[NBL][NBC]){
   // il faut vérifier que le côté opposé de la position est accessible
   // il faudra améliorer cette fonction, en prenant en compte la précédente position théorique du joueur, et de s'il peut accéder à ce fameux côté opposé depuis là où il est
   tuple<int, int> vector_of_move = move_in_vector[my_move];
@@ -435,10 +444,13 @@ bool crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int 
   deque<int> path_to_the_goal;
 
   tuple<int, int> goal_for_man = make_tuple(x_pos_opposite_of_move, y_pos_opposite_of_move);
-  // auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board);
-  // if (path_of_man.size() == 0){
-  //   return false;
-  // }
+  auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board);
+  if (path_of_man.size() == 0){
+    return make_tuple(false, path_of_man);
+  } else {
+    cout << "chemin du joueur" << endl;
+    print_deque(path_of_man);
+  }
 
   if (my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET) {
     cout << "crate is movable " << endl;
@@ -450,9 +462,9 @@ bool crate_is_movable(tuple<int, int> man_pos, tuple<int, int> current_pos, int 
   // cout << "my board at this pos : " << my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] << endl;
 
   // Attention ! j'ai peut-être inversé X et Y
-  return my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET; // && a_star_man();
+  return make_tuple(my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET, path_of_man); // && a_star_man();
 }
-bool legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple<int, int> new_pos, int my_move, int my_board[NBL][NBC]){
+tuple<bool, deque<int>> legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple<int, int> new_pos, int my_move, int my_board[NBL][NBC]){
   // move illégal si la case du côté opposé est unreachable, faut utilisé current_pos et move
   // Si c'est reachable, alors la nouvelle case se doit d'être free, ça c'est new_pos
 
@@ -465,8 +477,11 @@ bool legal_move_crate(tuple<int, int> man_pos, tuple<int, int> current_pos,tuple
     cout << "new pos not free : " <<  my_board[get<1>(new_pos)][get<0>(new_pos)]<< endl;
   }
 
+  tuple<int, deque<int>> res = crate_is_movable(man_pos, current_pos, my_move, my_board);
 
-  return  my_new_pos_is_free && crate_is_movable(man_pos, current_pos, my_move, my_board);
+  bool is_movable = get<0>(res);
+  deque<int> path_of_man = get<1>(res);
+  return  make_tuple(my_new_pos_is_free && is_movable, path_of_man);
 }
 
 
@@ -506,6 +521,20 @@ void print_path(deque<int> path) {
 // au pire pas grave, on filtre pas les coups interdit tant pis, on se contente juste de ranger les coups de manière bête et méchante
 // aussi, il faut interdire le coup inverse du précédent coup du coup, càd si le précédent coup est up, le prochain ne peux pas être down. C'est important comme règle car le mouvement devient inutile
 // en faite, pas besoin d'annuler les previous move, dans tout les cas si c'est un mauvais coup, il est mis en bas dans la priorité, et dans certain car ça pourrait être utile peut-êtr edonc pas grave
+
+void push_deque_in_deque (deque<int>& my_deque, deque<int>& deque_to_add){
+  for (int el : deque_to_add){
+    my_deque.push_back(el);
+  }
+}
+
+void make_moves_on_board(tuple<int, int>& man_pos, deque<int> my_moves, int my_board[NBL][NBC]){
+  for (int my_move : my_moves){
+    tuple<int, int> new_pos = make_move(man_pos, my_move);
+    make_move_on_board(my_board, man_pos, new_pos, my_move);
+    man_pos = new_pos;
+  }
+}
 deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
   cout << "seg ?" << endl;
   static int dir = 1;
@@ -524,10 +553,12 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   }
   print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
-    copy_board(my_board, my_new_board);
 
-    bool is_legal = legal_move_crate(man_pos, current_pos, move.new_pos, move.my_move, my_new_board);
+    tuple<int, deque<int>> is_legal_and_man_path = legal_move_crate(man_pos, current_pos, move.new_pos, move.my_move, my_new_board);
+    bool is_legal = get<0>(is_legal_and_man_path);
+    deque<int> man_path = get<1>(is_legal_and_man_path);
     if (is_legal) {
+    copy_board(my_board, my_new_board);
       // if (move.my_move != 4){
       //   cout << "sortient ! " <<  move.my_move<< endl;
       //   exit(1);
@@ -536,7 +567,9 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
     cout << "commencement du print " << endl;
       print_a_board(my_new_board);
     cout << "fin du print " << endl;
-      make_move_crate_on_board(my_new_board, current_pos, move.my_move);
+      man_path.push_back(move.my_move);
+      make_moves_on_board(man_pos, man_path, my_new_board);
+      // make_move_crate_on_board(my_new_board, current_pos, move.my_move);
       cout << "le move : " << move.my_move << endl;
     cout << "commencement du print " << endl;
       print_a_board(my_new_board);
@@ -544,7 +577,7 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
       // exit(1);
       cout << "moved " << endl;
       // print_a_board(my_new_board);
-      path_to_the_goal.push_back(move.my_move);
+      push_deque_in_deque(path_to_the_goal, man_path);
       cout << "addent" << endl;
       cout << "addent 2" << endl;
       // dir++;
@@ -555,7 +588,9 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
       }
-      path_to_the_goal.pop_back();
+      for (int i = 0; i < man_path.size(); i++){
+        path_to_the_goal.pop_back();
+      }
     }
   }
   // for (int direction = 0 ; direction < 5; direction++){
@@ -587,7 +622,7 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
 deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, int my_board[NBL][NBC]){
   deque<int> path_to_the_goal;
   // tuple<int, int> goal = find_nearest_goal();
-  tuple<int, int> man_foo = make_tuple(0, 0);
+  tuple<int, int> man_foo = make_tuple(3, 1);
   return a_star_crate(man_foo, current_pos, path_to_the_goal, goal, my_board);
 }
 
