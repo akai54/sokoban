@@ -551,11 +551,11 @@ void make_moves_on_board(tuple<int, int>& man_pos, deque<int> my_moves, int my_b
   cout << "DEBUT" << endl;
   for (int my_move : my_moves){
     tuple<int, int> new_pos = make_move(man_pos, my_move);
+    print_a_board(my_board);
     make_move_on_board(my_board, man_pos, new_pos, my_move);
     man_pos = new_pos;
     cout << "the move : " << my_move << endl;
       
-    print_a_board(my_board);
   }
   cout << "FIN" << endl;
 }
@@ -644,11 +644,11 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   deque<int> vide;
   return vide;
 }
-deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, int my_board[NBL][NBC]){
+deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, int my_board[NBL][NBC], tuple<int, int> man_pos){
   deque<int> path_to_the_goal;
   // tuple<int, int> goal = find_nearest_goal();
-  tuple<int, int> man_foo = make_tuple(3, 1);
-  return a_star_crate(man_foo, current_pos, path_to_the_goal, goal, my_board);
+  // tuple<int, int> man_foo = make_tuple(3, 1);
+  return a_star_crate(man_pos, current_pos, path_to_the_goal, goal, my_board);
 }
 
 
@@ -684,6 +684,7 @@ void sok_board_t::path_to_the_goal(){
   // int x = 5; 
   // int y = 7; 
   tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
+  tuple<int, int> crate_pos = {1, 3};
 
   tuple<int, int> goal = {1, 4};
   // tuple<int, int> goal = {15, 6};
@@ -692,7 +693,7 @@ void sok_board_t::path_to_the_goal(){
   // this -> board[7][15] = FREE;
   this -> print_board ();
   // exit(1);
-  auto res = a_star_crate_init(current_pos, goal, this -> board);
+  auto res = a_star_crate_init(crate_pos, goal, this -> board, current_pos);
 
   if (res.empty()){
     cout << "no soluce" << endl;
@@ -701,7 +702,7 @@ void sok_board_t::path_to_the_goal(){
   print_path(res);
   this -> print_pos_man1();
   make_moves_on_board(current_pos, res, this -> board);
-  // this -> set_new_pos_man1(current_pos);
+  this -> set_new_pos_man1(current_pos);
   // this -> print_pos_man1();
 
   this -> print_board ();
