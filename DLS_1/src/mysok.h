@@ -48,7 +48,7 @@
 #define END_OF_LINE 10
 
 // Profondeur max pour DLS
-#define MAX_DEPTH 8
+#define MAX_DEPTH 25
 
 // Représentation en chaîne du grille de jeu
 char board_str[] = {' ', '_', '.', '#', '$', '*', '1', 'u', '2', 'd', 'a'};
@@ -103,6 +103,8 @@ int get_coords_name(sok_board_t &S, int x, int y) { return S.board[x][y]; }
 bool can_move(sok_board_t &S, int x, int y) {
   if (get_coords_name(S, x, y) == OUT || get_coords_name(S, x, y) == WALL ||
       get_coords_name(S, x, y) == CRATE_ON_TARGET ||
+      get_coords_name(S, x, y) == TARGET ||
+
       get_coords_name(S, x, y) == END_OF_LINE) {
     return false;
   } else if (get_coords_name(S, x, y) == CRATE_ON_FREE) {
@@ -112,7 +114,6 @@ bool can_move(sok_board_t &S, int x, int y) {
 }
 
 void move_man(sok_board_t &S, int direction) {
-  S.print_board();
   // Store the current state of the game board and man's position
   State current_state = {S.man1_x, S.man1_y, S.nbr_crates};
   for (int i = 0; i < NBL; i++) {
@@ -236,6 +237,8 @@ void move_man(sok_board_t &S, int direction) {
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   }
+  std::cout << "---------------------------------" << std::endl;
+  S.print_board();
   states.push(current_state);
 }
 
