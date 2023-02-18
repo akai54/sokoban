@@ -14,6 +14,7 @@
 #define MYSOK_H
 #include <cstdio>
 #include <cstdlib>
+#include <climits>
 #include <iostream>
 #include <string.h>
 #include <string>
@@ -300,7 +301,7 @@ int dist(tuple<int, int> a, tuple<int, int> b){
   return res;
 }
 
-tuple<int, int> find_nearest_goal(tuple<int, int> my_crate, deque<tuple<int, int>> list_of_target){
+tuple<int, int> find_nearest_goal(tuple<int, int> my_crate, deque<tuple<int, int>>& list_of_target){
   // vérifier si il y a une place de dispo 
   int min_dist = dist(my_crate, list_of_target[0]);
   int target = 0;
@@ -317,7 +318,19 @@ tuple<int, int> find_nearest_goal(tuple<int, int> my_crate, deque<tuple<int, int
   }
   return list_of_target[index_nearest_target];
 }
-
+int find_the_nearest_crate_from_target(deque<tuple<int, int>>& crates, tuple<int, int>& random_target){
+  int min_dist = dist(crates[0], random_target);
+  int my_nearest = 0;
+  int new_dist;
+  for (int i = 0; i < crates.size(); i++){
+    new_dist = dist(crates[i], random_target);
+    if (new_dist < min_dist){
+      min_dist = new_dist;
+      my_nearest = i;
+    }
+  }
+  return my_nearest;
+}
 // tuple<int, int> find_
 bool is_position_free(tuple<int, int> pos, int board[NBL][NBC]){
   // cout << "la position x = " << get<0>(pos) << ", y = " << get<1>(pos)<< " est libre ? " << board[get<1>(pos)][get<0>(pos)] << endl;
@@ -693,20 +706,22 @@ void sok_board_t::set_new_pos_man1(tuple<int, int> new_pos){
 void sok_board_t::path_to_the_goal(){
 
 
-  // int x = 1; 
-  // int y = 3; 
-  // int x = 5; 
-  // int y = 7; 
-
   tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
   cout << "max x : " << this -> man1_x << ", man y : " << this -> man1_y << endl;
   deque<int> entire_path;
-  for (auto crate_pos : this -> crates_on_free){
+  tuple<int, int> crate_pos;
+  int crate_pos_index;
+  while (this -> crates_on_free.size() > 0) {
+    crate_pos_index = find_the_nearest_crate_from_target(this->crates_on_free, this -> targets[0]);
+    crate_pos = this -> crates_on_free[crate_pos_index];
+    this -> crates_on_free.erase(this -> crates_on_free.begin() + crate_pos_index);
+    
+  // for (auto crate_pos : this -> crates_on_free){
     // tuple<int, int> crate_pos = {1, 3};
 
-    cout << // "goal x : "   << get<0>(goal) << ", y : " << get<1>(goal) << 
-      "; crate_pos x : " << get<0>(crate_pos) << ", y : " << get<1>(crate_pos) << endl;
     tuple<int, int> goal = find_nearest_goal(crate_pos, this -> targets);
+    cout << "goal x : "   << get<0>(goal) << ", y : " << get<1>(goal) << 
+      "; crate_pos x : " << get<0>(crate_pos) << ", y : " << get<1>(crate_pos) << endl;
     cout << "fin " << endl;
   // tuple<int, int> goal = {1, 4};
   // tuple<int, int> goal = {15, 6};
