@@ -143,7 +143,7 @@ void print_a_board(int board[NBL][NBC]) {
       if (board[i][j] == END_OF_LINE) // Si fin, sortir de la boucle
         break;
       // Sinon afficher la case actuelle
-      printf("%d", board[i][j]);
+      printf("%c", board_str[board[i][j]]);
     }
     printf("\n");
   }
@@ -417,7 +417,7 @@ void make_move_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, tuple<in
 }
 
 // osef du déplacement du crate, il faudrait faire en sorte de seulement renvoyer les déplacements du joueur 
-deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
+deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC], int previous_move){
   if (current_pos == goal) { 
     return path_to_the_goal;
   }
@@ -426,15 +426,17 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
   Move_with_dist mwd;
   list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
   for (int direction = 0 ; direction < 4; direction++){
-    new_pos = make_move(current_pos, direction);
-    fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
-    insert_with_sorting(sorted_move, mwd);
+    if (direction != previous_move){
+        new_pos = make_move(current_pos, direction);
+        fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
+        insert_with_sorting(sorted_move, mwd);
+    }
   }
   // cout << "ùùùùùùùùùùùùùùùùùùùù" << endl;
   // cout << "current pos x : " << get<0>(current_pos) << ", y : "<< get<1>(current_pos) << endl;
   // cout << "man : " << endl;
   // print_list_move(sorted_move);
-  // print_a_board(my_board);
+  print_a_board(my_board);
   for (Move_with_dist move : sorted_move){
     
 
@@ -446,7 +448,7 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
       copy_board(my_board, my_new_board);
       make_move_on_board(my_new_board, current_pos, move.new_pos, move.my_move); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
       path_to_the_goal.push_back(move.my_move);
-      deque<int> res = a_star_man(move.new_pos, path_to_the_goal, goal, my_new_board);
+      deque<int> res = a_star_man(move.new_pos, path_to_the_goal, goal, my_new_board, move.my_move);
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
       }
@@ -490,7 +492,7 @@ tuple<bool, deque<int>> crate_is_movable(tuple<int, int> man_pos, tuple<int, int
 
   // print_a_board(my_board);
   tuple<int, int> goal_for_man = make_tuple(x_pos_opposite_of_move, y_pos_opposite_of_move);
-  auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board);
+  auto path_of_man = a_star_man(man_pos, path_to_the_goal, goal_for_man, my_board, -1);
   if (path_of_man.size() == 0){
     return make_tuple(false, path_of_man);
   } else {
@@ -586,7 +588,7 @@ void make_moves_on_board(tuple<int, int>& man_pos, deque<int> my_moves, int my_b
   }
   // cout << "FIN" << endl;
 }
-deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
+deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC], int previous_move){
   // cout << "seg ?" << endl;
   static int dir = 1;
   if (current_pos == goal) { 
@@ -598,9 +600,11 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   Move_with_dist mwd;
   list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
   for (int direction = 0 ; direction < 4; direction++){
-    new_pos = make_move(current_pos, direction);
-    fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
-    insert_with_sorting(sorted_move, mwd);
+    if (direction != previous_move){
+        new_pos = make_move(current_pos, direction);
+        fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
+        insert_with_sorting(sorted_move, mwd);
+    }
   }
   // print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
@@ -635,7 +639,7 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
       // dir++;
       // cout << "val : " << dir << endl;
       // cout << "new pos (x, y) : " << get<0>(new_pos) << ", " << get<1>(new_pos)<< endl;
-      deque<int> res = a_star_crate(man_pos, move.new_pos, path_to_the_goal, goal, my_board);
+      deque<int> res = a_star_crate(man_pos, move.new_pos, path_to_the_goal, goal, my_board, move.my_move);
       // cout << "res" << endl;
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
@@ -675,7 +679,7 @@ deque<int> a_star_crate_init(tuple<int, int> current_pos, tuple<int, int> goal, 
   deque<int> path_to_the_goal;
   // tuple<int, int> goal = find_nearest_goal();
   // tuple<int, int> man_foo = make_tuple(3, 1);
-  return a_star_crate(man_pos, current_pos, path_to_the_goal, goal, my_board);
+  return a_star_crate(man_pos, current_pos, path_to_the_goal, goal, my_board, -1);
 }
 
 
