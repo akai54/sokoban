@@ -182,23 +182,23 @@ void sok_board_t::load(char *_file) {
           board[board_nbl][i] = FREE;
         } else if (line[i] == board_str[TARGET]) {
           board[board_nbl][i] = TARGET;
-          targets.push_back(make_tuple(board_nbl, i));
+          targets.push_back(make_tuple(i, board_nbl));
         } else if (line[i] == board_str[WALL]) {
           read_ok = true;
           board[board_nbl][i] = WALL;
         } else if (line[i] == board_str[CRATE_ON_FREE]) {
           board[board_nbl][i] = CRATE_ON_FREE;
-          crates_on_free.push_back(make_tuple(board_nbl, i));
+          crates_on_free.push_back(make_tuple(i, board_nbl));
         } else if (line[i] == board_str[CRATE_ON_TARGET]) {
           board[board_nbl][i] = CRATE_ON_TARGET;
         } else if (line[i] == board_str[MAN1_ON_FREE]) {
-          man1_x = board_nbl;
-          man1_y = i;
+          man1_y = board_nbl;
+          man1_x = i;
           board[board_nbl][i] = MAN1_ON_FREE;
         } else if (line[i] == board_str[MAN1_ON_TARGET]) {
-          man1_x = board_nbl;
-          man1_y = i;
-          board[board_nbl][i] = MAN1_ON_TARGET;
+          man1_y = board_nbl;
+          man1_x = i;
+          board[man1_y][man1_x] = MAN1_ON_TARGET;
         } else if (line[i] == board_str[MAN2_ON_FREE]) {
           man2_x = board_nbl;
           man2_y = i;
@@ -288,11 +288,6 @@ Il faut interdire les mouvements de boite vers l'objectif. Si une boite est mis 
 il faut aussi interdire les déplacement de boite à côté d'une autre boite coller au même mur. Car ça rend impossible tout mouvement
 Sinon, de manière évidente, il est interdit de mettre une boite dans un coin, ou sur un mur continue avec deux coins
 */
-tuple<int, int> find_nearest_goal(){
-  // à créer
-  // en vrai osef pour l'instant, on a qu'à décrire des points manuellement
-  return make_tuple(0, 0);
-}
 tuple<int, int> make_move(tuple<int, int> current_pos, int my_move){
   tuple<int, int> vector_of_move = move_in_vector[my_move];
   return make_tuple(get<0>(current_pos) + get<0>(vector_of_move),
@@ -305,8 +300,27 @@ int dist(tuple<int, int> a, tuple<int, int> b){
   return res;
 }
 
+tuple<int, int> find_nearest_goal(tuple<int, int> my_crate, deque<tuple<int, int>> list_of_target){
+  // vérifier si il y a une place de dispo 
+  int min_dist = dist(my_crate, list_of_target[0]);
+  int target = 0;
+  int new_dist, index_nearest_target;
+
+  // cout << "seg f" << endl;
+  for (int i = 0; i < list_of_target.size(); i++) {
+    cout << i << endl;
+    new_dist = dist(my_crate, list_of_target[i]);
+    if (min_dist > new_dist){
+      min_dist = new_dist;
+      index_nearest_target = i;
+    }
+  }
+  return list_of_target[index_nearest_target];
+}
+
+// tuple<int, int> find_
 bool is_position_free(tuple<int, int> pos, int board[NBL][NBC]){
-  cout << "la position x = " << get<0>(pos) << ", y = " << get<1>(pos)<< " est libre ? " << board[get<1>(pos)][get<0>(pos)] << endl;
+  // cout << "la position x = " << get<0>(pos) << ", y = " << get<1>(pos)<< " est libre ? " << board[get<1>(pos)][get<0>(pos)] << endl;
   return board[get<1>(pos)][get<0>(pos)] == FREE;
 }
 bool is_position_of_crate(tuple<int, int> pos, int board[NBL][NBC]){
@@ -315,12 +329,12 @@ bool is_position_of_crate(tuple<int, int> pos, int board[NBL][NBC]){
 
 bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, int> my_new_pos, int board[NBL][NBC]){
   if (!position_exist_on_the_board(my_new_pos)){
-    cout << "position n'existe pas sur le board" << endl;
+    // cout << "position n'existe pas sur le board" << endl;
     return false;
   }
 
   if (is_position_free(my_new_pos, board)){
-    cout << "position est libre" << endl;
+    // cout << "position est libre" << endl;
     return true;
   }
 
@@ -335,7 +349,7 @@ bool legal_move_man_1(tuple<int, int> move, tuple<int, int> my_pos, tuple<int, i
     }
   }
 
- cout << "jusque là ? chelou" << endl;
+ // cout << "jusque là ? chelou" << endl;
   return false;
 }
 
@@ -403,18 +417,18 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
     fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
     insert_with_sorting(sorted_move, mwd);
   }
-  cout << "ùùùùùùùùùùùùùùùùùùùù" << endl;
-  cout << "current pos x : " << get<0>(current_pos) << ", y : "<< get<1>(current_pos) << endl;
-  cout << "man : " << endl;
-  print_list_move(sorted_move);
+  // cout << "ùùùùùùùùùùùùùùùùùùùù" << endl;
+  // cout << "current pos x : " << get<0>(current_pos) << ", y : "<< get<1>(current_pos) << endl;
+  // cout << "man : " << endl;
+  // print_list_move(sorted_move);
   // print_a_board(my_board);
   for (Move_with_dist move : sorted_move){
     
 
     bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
-    cout << move.my_move << " is legal ? " << is_legal << endl;
+    // cout << move.my_move << " is legal ? " << is_legal << endl;
     if (is_legal) {
-      cout << "LEGAL move number : " << move.my_move << endl;
+      // cout << "LEGAL move number : " << move.my_move << endl;
       // exit(1);
       copy_board(my_board, my_new_board);
       make_move_on_board(my_new_board, current_pos, move.new_pos, move.my_move); // je suis pas sûr c'est direction, et j'ai ajouter des arg à la va vite
@@ -441,7 +455,7 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
   //     path_to_the_goal.pop_back();
   //   }
   // }
-  printf("illegal move\n");
+  // printf("illegal move\n");
 
   // aucun move n'est légal, ou alors aucun des futurs move ne l'est si on est arrivé jusque là
   deque<int> vide;
@@ -467,14 +481,14 @@ tuple<bool, deque<int>> crate_is_movable(tuple<int, int> man_pos, tuple<int, int
   if (path_of_man.size() == 0){
     return make_tuple(false, path_of_man);
   } else {
-    cout << "chemin du joueur" << endl;
-    print_deque(path_of_man);
+    // cout << "chemin du joueur" << endl;
+    // print_deque(path_of_man);
   }
 
   if (my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == FREE || my_board[y_pos_opposite_of_move][x_pos_opposite_of_move] == TARGET) {
-    cout << "crate is movable " << endl;
+    // cout << "crate is movable " << endl;
   }else {
-    cout << "crate is  not movable : " <<  my_board[y_pos_opposite_of_move][x_pos_opposite_of_move]  << endl;
+    // cout << "crate is  not movable : " <<  my_board[y_pos_opposite_of_move][x_pos_opposite_of_move]  << endl;
   }
   // cout << "x_pos_opposite_of_move : " << x_pos_opposite_of_move << endl;
   // cout << "y_pos_opposite_of_move : " << y_pos_opposite_of_move << endl;
@@ -491,9 +505,9 @@ tuple<bool, deque<int>> legal_move_crate(tuple<int, int> man_pos, tuple<int, int
   // Attention ! j'ai peut-être inversé les deux get<X>
   bool my_new_pos_is_free = my_board[get<1>(new_pos)][get<0>(new_pos)] == FREE || my_board[get<1>(new_pos)][get<0>(new_pos)] == TARGET;
   if (my_new_pos_is_free) {
-    cout << "new pos free " << endl;
+    // cout << "new pos free " << endl;
   } else {
-    cout << "new pos not free : " <<  my_board[get<1>(new_pos)][get<0>(new_pos)]<< endl;
+    // cout << "new pos not free : " <<  my_board[get<1>(new_pos)][get<0>(new_pos)]<< endl;
   }
 
   tuple<int, deque<int>> res = crate_is_movable(man_pos, current_pos, my_move, my_board);
@@ -548,19 +562,19 @@ void push_deque_in_deque (deque<int>& my_deque, deque<int>& deque_to_add){
 }
 
 void make_moves_on_board(tuple<int, int>& man_pos, deque<int> my_moves, int my_board[NBL][NBC]){
-  cout << "DEBUT" << endl;
+  // cout << "DEBUT" << endl;
   for (int my_move : my_moves){
     tuple<int, int> new_pos = make_move(man_pos, my_move);
-    print_a_board(my_board);
+    // print_a_board(my_board);
     make_move_on_board(my_board, man_pos, new_pos, my_move);
     man_pos = new_pos;
-    cout << "the move : " << my_move << endl;
+    // cout << "the move : " << my_move << endl;
       
   }
-  cout << "FIN" << endl;
+  // cout << "FIN" << endl;
 }
 deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC]){
-  cout << "seg ?" << endl;
+  // cout << "seg ?" << endl;
   static int dir = 1;
   if (current_pos == goal) { 
     return path_to_the_goal;
@@ -575,7 +589,7 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
     fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
     insert_with_sorting(sorted_move, mwd);
   }
-  print_list_move(sorted_move);
+  // print_list_move(sorted_move);
   for (Move_with_dist move : sorted_move){
 
 
@@ -588,28 +602,28 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
       //   cout << "sortient ! " <<  move.my_move<< endl;
       //   exit(1);
       // }
-      cout << "legalent " << endl;
-    cout << "commencement du print " << endl;
-      print_a_board(my_new_board);
-    cout << "fin du print " << endl;
+    //   cout << "legalent " << endl;
+    // cout << "commencement du print " << endl;
+    //   print_a_board(my_new_board);
+    // cout << "fin du print " << endl;
       man_path.push_back(move.my_move);
       make_moves_on_board(man_pos, man_path, my_new_board);
       // make_move_crate_on_board(my_new_board, current_pos, move.my_move);
-      cout << "le move : " << move.my_move << endl;
-    cout << "commencement du print " << endl;
-      print_a_board(my_new_board);
-    cout << "fin du print " << endl;
+    //   cout << "le move : " << move.my_move << endl;
+    // cout << "commencement du print " << endl;
+    //   print_a_board(my_new_board);
+    // cout << "fin du print " << endl;
       // exit(1);
-      cout << "moved " << endl;
+      // cout << "moved " << endl;
       // print_a_board(my_new_board);
       push_deque_in_deque(path_to_the_goal, man_path);
-      cout << "addent" << endl;
-      cout << "addent 2" << endl;
+      // cout << "addent" << endl;
+      // cout << "addent 2" << endl;
       // dir++;
       // cout << "val : " << dir << endl;
       // cout << "new pos (x, y) : " << get<0>(new_pos) << ", " << get<1>(new_pos)<< endl;
       deque<int> res = a_star_crate(man_pos, move.new_pos, path_to_the_goal, goal, my_board);
-      cout << "res" << endl;
+      // cout << "res" << endl;
       if (!res.empty()){ // si les futurs move sont légaux
         return res;
       }
@@ -638,7 +652,7 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   //     path_to_the_goal.pop_back();
   //   }
   // }
-  printf("illegal move\n");
+  // printf("illegal move\n");
 
   // aucun move n'est légal, ou alors aucun des futurs move ne l'est si on est arrivé jusque là
   deque<int> vide;
@@ -683,33 +697,46 @@ void sok_board_t::path_to_the_goal(){
   // int y = 3; 
   // int x = 5; 
   // int y = 7; 
-  tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
-  tuple<int, int> crate_pos = {1, 3};
 
-  tuple<int, int> goal = {1, 4};
+  tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
+  cout << "max x : " << this -> man1_x << ", man y : " << this -> man1_y << endl;
+  deque<int> entire_path;
+  for (auto crate_pos : this -> crates_on_free){
+    // tuple<int, int> crate_pos = {1, 3};
+
+    cout << // "goal x : "   << get<0>(goal) << ", y : " << get<1>(goal) << 
+      "; crate_pos x : " << get<0>(crate_pos) << ", y : " << get<1>(crate_pos) << endl;
+    tuple<int, int> goal = find_nearest_goal(crate_pos, this -> targets);
+    cout << "fin " << endl;
+  // tuple<int, int> goal = {1, 4};
   // tuple<int, int> goal = {15, 6};
   // il faudrait ici faire une copy du board et ensuite l'envoyer, car on modifie juste pour obtenir le path mais on veut pas le modifier en soit, mais là pas grave c'est pour des test
   // this -> board[y][x] = FREE;
   // this -> board[7][15] = FREE;
-  this -> print_board ();
+  // this -> print_board ();
   // exit(1);
   auto res = a_star_crate_init(crate_pos, goal, this -> board, current_pos);
 
   if (res.empty()){
     cout << "no soluce" << endl;
   }
-  this -> print_board ();
-  print_path(res);
-  this -> print_pos_man1();
+  // this -> print_board ();
+  // print_path(res);
+  push_deque_in_deque(entire_path, res);
+  // this -> print_pos_man1();
   make_moves_on_board(current_pos, res, this -> board);
   this -> set_new_pos_man1(current_pos);
-  // this -> print_pos_man1();
+  // // this -> print_pos_man1();
 
   this -> print_board ();
   // cout << "crates : "<< endl;
   // this -> print_crates_on_free_pos();
   // cout << "targets : " << endl;
   // this -> print_targets();
+  for (auto i: entire_path){
+    cout << "i : " << i << endl;
+  }
+  }
 }
 
 
