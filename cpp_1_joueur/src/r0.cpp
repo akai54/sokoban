@@ -13,8 +13,6 @@ int main(int _ac, char **_av) {
   sok_board_t S;
   S.load(_av[1]);
   S.print_board();
-  S.print_board_brut();
-
   S.path_to_the_goal();
   return 0;
 }
