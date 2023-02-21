@@ -21,8 +21,8 @@ Les murs sont des "#"
 ## TODO
 
 - [x] Analyse du problème: comprendre les conditions de déplacement des joueurs et des caisses.
-- [ ] Implementation 1 joueur Prolog.
-- [ ] Implementation 1 joueur C/C++.
+- [x] Implementation 1 joueur Prolog.
+- [x] Implementation 1 joueur C/C++.
 - [ ] Implementation 2 joueurs Prolog.
 - [ ] Implementation 2 joueurs C/C++.
 - [ ] Rapport final.
