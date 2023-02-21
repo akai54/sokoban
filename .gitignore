@@ -2,5 +2,6 @@ src/.cache
 src/compile_commands.json
 src/r0
 DLS_1/src/.cache
-DLS_1/src/compile_commands.json
-DLS_1/src/r0
+AL_ADDAM_DLS/src/compile_commands.json
+AL_ADDAM_DLS/src/r0
+AL_ADDAM_DLS/src/.cache/*
