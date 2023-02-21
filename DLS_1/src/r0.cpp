@@ -8,7 +8,6 @@ int main(int _ac, char **_av) {
   }
   sok_board_t S;
   S.load(_av[1]);
-  std::cout << S.nbr_crates << std::endl;
 
   // Appel Depth Limited Search
   bool solved = iddfs(S);

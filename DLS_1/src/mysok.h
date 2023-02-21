@@ -237,8 +237,6 @@ void move_man(sok_board_t &S, int direction) {
     S.board[S.man1_x][S.man1_y] = MAN1_ON_FREE;
     break;
   }
-  std::cout << "---------------------------------" << std::endl;
-  S.print_board();
   states.push(current_state);
 }
 
@@ -304,7 +302,6 @@ bool iddfs(sok_board_t &S) {
   // Demarrer avec une profondeur de 0, et ensuite augmenter
   // jusqu'a ce qu'on atteine la limite etabli en haut
   for (int depth = 0; depth < MAX_DEPTH; depth++) {
-    std::cout << "profondeur: " << depth << std::endl;
     if (depth_limited_search(S, depth))
       return true;
   }
