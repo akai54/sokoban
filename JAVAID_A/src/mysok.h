@@ -120,7 +120,7 @@ void sok_board_t::print_board_brut(){
     }
     printf("\n");
   }
-  
+
 }
 // Afficher le grille de jeu
 void sok_board_t::print_board() {
@@ -220,7 +220,7 @@ bool position_exist_on_the_board(tuple<int, int> pos){
 
 tuple<int, int> apply_move_to_position(tuple<int, int> move, tuple<int, int> my_pos){
   return make_tuple(get<0>(my_pos) + get<0>(move)
-                         ,get<1>(my_pos) + get<1>(move));
+                    ,get<1>(my_pos) + get<1>(move));
 }
 
 typedef struct move_with_dist{
@@ -364,10 +364,10 @@ void make_move_on_board(int my_board[NBL][NBC], tuple<int, int> my_pos, tuple<in
     make_move_crate_on_board(my_board, my_new_pos, my_index_move);
     my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_FREE;
   } else if (my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] == CRATE_ON_TARGET)
-  {
-    make_move_crate_on_board(my_board, my_new_pos, my_index_move);
-    my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_TARGET;
-  }
+    {
+      make_move_crate_on_board(my_board, my_new_pos, my_index_move);
+      my_board[get<1>(my_new_pos)][get<0>(my_new_pos)] = MAN1_ON_TARGET;
+    }
 }
 
 deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, tuple<int, int> goal, int my_board[NBL][NBC], int previous_move){
@@ -380,14 +380,14 @@ deque<int> a_star_man(tuple<int, int> current_pos, deque<int> path_to_the_goal, 
   list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
   for (int direction = 0 ; direction < 4; direction++){
     if (direction != previous_move){
-        new_pos = make_move(current_pos, direction);
-        fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
-        insert_with_sorting(sorted_move, mwd);
+      new_pos = make_move(current_pos, direction);
+      fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
+      insert_with_sorting(sorted_move, mwd);
     }
   }
   // print_a_board(my_board);
   for (Move_with_dist move : sorted_move){
-    
+
 
     bool is_legal = legal_move_man_1(move_in_vector[move.my_move], current_pos, move.new_pos, my_board);
     if (is_legal) {
@@ -445,7 +445,7 @@ void print_pos(tuple<int, int> pos){
 
 void print_path(deque<int> path) {
   for (auto const& direction : path){
-       cout << direction << " "; 
+    cout << direction << " "; 
   }
   cout << endl << endl;
 }
@@ -473,9 +473,9 @@ deque<int> a_star_crate(tuple<int, int> man_pos, tuple<int, int> current_pos, de
   list<Move_with_dist> sorted_move; // du mouvement le plus proche du goal au moins proche
   for (int direction = 0 ; direction < 4; direction++){
     if (direction != previous_move){
-        new_pos = make_move(current_pos, direction);
-        fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
-        insert_with_sorting(sorted_move, mwd);
+      new_pos = make_move(current_pos, direction);
+      fill_mwd(mwd, direction, dist(new_pos, goal), new_pos);
+      insert_with_sorting(sorted_move, mwd);
     }
   }
   for (Move_with_dist move : sorted_move){
@@ -521,11 +521,9 @@ void sok_board_t::print_crates_on_free_pos(){
 
 void sok_board_t::set_new_pos_man1(tuple<int, int> new_pos){
   this -> man1_x = get<0>(new_pos);
-    this -> man1_y = get<1>(new_pos);
+  this -> man1_y = get<1>(new_pos);
 }
 void sok_board_t::path_to_the_goal(){
-
-
   tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
   deque<int> entire_path;
   tuple<int, int> crate_pos;
@@ -538,18 +536,18 @@ void sok_board_t::path_to_the_goal(){
     tuple<int, int> goal = find_nearest_goal(crate_pos, this -> targets);
     cout << "goal x : "   << get<0>(goal) << ", y : " << get<1>(goal) << 
       "; crate_pos x : " << get<0>(crate_pos) << ", y : " << get<1>(crate_pos) << endl;
-  auto res = a_star_crate_init(crate_pos, goal, this -> board, current_pos);
-  if (res.empty()){
-    cout << "Pas de solution" << endl;
-  }
-  push_deque_in_deque(entire_path, res);
-  make_moves_on_board(current_pos, res, this -> board);
-  this -> set_new_pos_man1(current_pos);
-  this -> print_board ();
-  cout << "chemin solution : " << endl;
-  for (int i: entire_path){
-    cout <<  i << endl;
-  }
+    auto res = a_star_crate_init(crate_pos, goal, this -> board, current_pos);
+    if (res.empty()){
+      cout << "Pas de solution" << endl;
+    }
+    push_deque_in_deque(entire_path, res);
+    make_moves_on_board(current_pos, res, this -> board);
+    this -> set_new_pos_man1(current_pos);
+    this -> print_board ();
+    cout << "chemin solution : " << endl;
+    for (int i: entire_path){
+      cout <<  i << endl;
+    }
   }
 }
 
