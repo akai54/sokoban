@@ -224,9 +224,14 @@ list_butlast_prev([X1|Xs], [X0|Ys], X0) :-
    list_butlast_prev(Xs, Ys, X1).
 % a predicat to test the program.
 solver :- 
+	statistics(walltime, [Start,_]),
 	puzzleI(Puzzle),
 	astar(Puzzle, Sol), 
-	write(Sol).
+	write(Sol),
+	statistics(walltime, [End,_]),
+    Time is End - Start,
+	nl,
+    format('Execution time: ~3f seconds.~n', [Time/1000]).
 
 % to use the program just execute the following command in a swipl interpreter: 
 % ?- solver.
