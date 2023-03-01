@@ -524,14 +524,17 @@ void sok_board_t::set_new_pos_man1(tuple<int, int> new_pos){
   this -> man1_y = get<1>(new_pos);
 }
 void sok_board_t::path_to_the_goal(){
+  
   tuple<int, int> current_pos = {this -> man1_x, this -> man1_y};
   deque<int> entire_path;
   tuple<int, int> crate_pos;
   int crate_pos_index;
+  
   while (this -> crates_on_free.size() > 0) {
     crate_pos_index = find_the_nearest_crate_from_target(this->crates_on_free, this -> targets[0]);
     crate_pos = this -> crates_on_free[crate_pos_index];
     this -> crates_on_free.erase(this -> crates_on_free.begin() + crate_pos_index);
+    cout << " " << endl;
 
     tuple<int, int> goal = find_nearest_goal(crate_pos, this -> targets);
     cout << "goal x : "   << get<0>(goal) << ", y : " << get<1>(goal) << 
