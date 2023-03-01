@@ -1,4 +1,4 @@
-# résolution de problèmes de Sokoban
+# Résolution de problèmes de Sokoban
 
 Le but de ce projet est de développer un programme capable de résoudre des problèmes de Sokoban en utilisant les algorithmes appropriés. Il existe deux versions du projet: une en C/C++ et une autre en Prolog.
 
@@ -18,6 +18,18 @@ Les caisses sont des "$"
 Les cases objectifs sont des "."
 Les murs sont des "#"
 
+Dans le programme prolog : 
+Les caisses sont des "$"
+Les cases objectifs sont des "g" 
+Les murs sont des "#"
+Les cases vides sont des "o"
+### Usage - Prolog 
+
+Afin de pouvoir tester le programme codé en prolog, il est nécessaire d'installer l'interpréteur [swipl]([https://www.google.com](https://www.swi-prolog.org/))
+
+Si cela est déjà fait, ouvrez un terminal dans le dossier courant, entrez dans l'interpreteur, ouvrez le ficher "soko.pl" et exécuter la commande suivante: 
+"?- solver.". 
+
 ## TODO
 
 - [x] Analyse du problème: comprendre les conditions de déplacement des joueurs et des caisses.
@@ -25,4 +37,4 @@ Les murs sont des "#"
 - [x] Implementation 1 joueur C/C++.
 - [ ] Implementation 2 joueurs Prolog.
 - [ ] Implementation 2 joueurs C/C++.
-- [ ] Rapport final.
+- [x] Rapport final.
