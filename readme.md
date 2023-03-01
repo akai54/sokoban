@@ -25,7 +25,7 @@ Les murs sont des "#"
 Les cases vides sont des "o"
 ### Usage - Prolog 
 
-Afin de pouvoir tester le programme codé en prolog, il est nécessaire d'installer l'interpréteur [swipl]([https://www.google.com](https://www.swi-prolog.org/))
+Afin de pouvoir tester le programme codé en prolog, il est nécessaire d'installer l'interpréteur [swipl](https://www.swi-prolog.org/)
 
 Si cela est déjà fait, ouvrez un terminal dans le dossier courant, entrez dans l'interpreteur, ouvrez le ficher "soko.pl" et exécuter la commande suivante: 
 "?- solver.". 
